@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use chrono::prelude::{DateTime, Local};
+
 #[derive(Debug)]
 enum TaskState{
     Abandon,
@@ -8,11 +11,11 @@ enum TaskState{
 #[derive(Debug)]
 struct Task {
     content: String,
-    status: TaskState,
+    state: TaskState,
     comments: Option<String>,
-    create_time: String,
-    update_time: String,
-    deadline: String,
+    create_time: DateTime<Local>,
+    update_time: DateTime<Local>,
+    deadline: Option<String>,
 }
 
 #[derive(Debug)]
@@ -24,18 +27,25 @@ struct TaskGroup {
 impl TaskGroup {
     fn new(group_name: String) -> Self {
         Self {
-            group_name: group_name,
+            group_name,
             tasks: Vec::new()
         }
     }
-    fn import(group_name: String) -> Self {
-        Self {
-            group_name: group_name,
-            tasks: Vec::new()
-        }
-    }
-    fn add(content: String, comments: Option<String>) -> bool {
-        true
+    // fn import(group_name: String) -> Self {
+    //     Self {
+    //         group_name: group_name,
+    //         tasks: Vec::new()
+    //     }
+    // }
+    fn add(mut self, content: String, comments: Option<String>, deadline: Option<String>) {
+       self.tasks.push(Task {
+            content,
+            state: TaskState::Todo,
+            comments,
+            create_time: Local::now(),
+            update_time: Local::now(),
+            deadline,
+       });
     }
     fn delete(id: i32) -> bool {
         true
@@ -43,8 +53,13 @@ impl TaskGroup {
 }
 
 fn main() {
-    let mut task_groups: Vec<TaskGroup> = vec![];
-    let homeless_group = TaskGroup::new("homeless".to_owned());
-    task_groups.push(homeless_group);
+    let mut task_groups = HashMap::new();
+    task_groups.insert(String::from("homeless"), TaskGroup::new("homeless".to_owned()));
     println!("{:?}", task_groups);
+    let homeless_group = task_groups.get(&"homeless".to_owned());
+    match homeless_group {
+        Some(group) => group.add("aaa".to_owned(), Some("fasdfdsaf".to_owned()), None),
+        None => (),
+    }
+    println!("{:?}", homeless_group)
 }
