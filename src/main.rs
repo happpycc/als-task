@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use chrono::prelude::{DateTime, Local};
+use std::io;
 
 #[derive(Debug)]
 enum TaskState{
@@ -37,7 +38,7 @@ impl TaskGroup {
     //         tasks: Vec::new()
     //     }
     // }
-    fn add(mut self, content: String, comments: Option<String>, deadline: Option<String>) {
+    fn add(&mut self, content: String, comments: Option<String>, deadline: Option<String>) {
        self.tasks.push(Task {
             content,
             state: TaskState::Todo,
@@ -47,19 +48,40 @@ impl TaskGroup {
             deadline,
        });
     }
-    fn delete(id: i32) -> bool {
-        true
+    fn delete(&mut self, content: String) {
+        for (index, task) in self.tasks.iter().enumerate() {
+            if task.content == content {
+                self.tasks.remove(index);
+                return
+            }
+        }
+    }
+    fn changeState(&mut self, content: String, state: TaskState) {
+        for (index, task) in self.tasks.iter().enumerate() {
+            if task.content == content {
+                self.tasks[index].state = state;
+                return
+            }
+        }
     }
 }
 
 fn main() {
     let mut task_groups = HashMap::new();
     task_groups.insert(String::from("homeless"), TaskGroup::new("homeless".to_owned()));
-    println!("{:?}", task_groups);
-    let homeless_group = task_groups.get(&"homeless".to_owned());
-    match homeless_group {
-        Some(group) => group.add("aaa".to_owned(), Some("fasdfdsaf".to_owned()), None),
-        None => (),
+    match task_groups.get_mut("homeless") {
+        Some(group) => group.add("content".to_owned(), None, None),
+        None => ()
     }
-    println!("{:?}", homeless_group)
+    println!("{:?}", task_groups.get("homeless"));
+    match task_groups.get_mut("homeless") {
+        Some(group) => group.changeState("content".to_owned(), TaskState::Abandon),
+        None => ()
+    }
+    println!("{:?}", task_groups.get("homeless"));
+    match task_groups.get_mut("homeless") {
+        Some(group) => group.delete("content".to_owned()),
+        None => ()
+    }
+    println!("{:?}", task_groups.get("homeless"));
 }
