@@ -48,21 +48,24 @@ impl TaskGroup {
             deadline,
        });
     }
-    fn delete(&mut self, content: String) {
+    fn delete(&mut self, content: String) -> Result<&str, &str> {
         for (index, task) in self.tasks.iter().enumerate() {
             if task.content == content {
                 self.tasks.remove(index);
-                return
+                return Ok("Delete well")
             }
         }
+        Err("Task not found")
     }
-    fn changeState(&mut self, content: String, state: TaskState) {
+    fn change_state(&mut self, content: String, state: TaskState) -> Result<&str, &str>{
         for (index, task) in self.tasks.iter().enumerate() {
             if task.content == content {
                 self.tasks[index].state = state;
-                return
+                return Ok("Task changed")
             }
         }
+        Err("Task not found")
+
     }
 }
 
@@ -75,12 +78,22 @@ fn main() {
     }
     println!("{:?}", task_groups.get("homeless"));
     match task_groups.get_mut("homeless") {
-        Some(group) => group.changeState("content".to_owned(), TaskState::Abandon),
+        Some(group) => {
+            match group.change_state("content".to_owned(), TaskState::Abandon) {
+                Ok(success) => println!("{}", success),
+                Err(error) => println!("{}", error)
+            }
+        },
         None => ()
     }
     println!("{:?}", task_groups.get("homeless"));
     match task_groups.get_mut("homeless") {
-        Some(group) => group.delete("content".to_owned()),
+        Some(group) => {
+            match group.delete("cotent".to_owned()) {
+                Ok(success) => println!("{:?}", success),
+                Err(error) => println!("{:?}", error)
+            }
+        },
         None => ()
     }
     println!("{:?}", task_groups.get("homeless"));
