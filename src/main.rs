@@ -1,28 +1,50 @@
+use chrono::prelude::Local;
+use serde::{Deserialize, Serialize};
+use serde_json::to_writer_pretty;
+use snowflake::SnowflakeIdBucket;
 use std::collections::HashMap;
-use chrono::prelude::{DateTime, Local};
-// use std::io;
+use std::fs::File;
 
-#[derive(Debug)]
-enum TaskState{
+#[derive(Debug, Default, Deserialize, Serialize)]
+enum TaskState {
     Abandon,
     Done,
+    #[default]
     Todo,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 struct Task {
-    // id: i32,
+    id: i64,
     content: String,
     state: TaskState,
     comments: Option<String>,
-    create_time: DateTime<Local>,
-    update_time: DateTime<Local>,
+    create_time: String,
+    update_time: String,
     deadline: Option<String>,
     child_tasks: Vec<Task>,
     parent_tasks: Vec<Task>,
 }
 
-#[derive(Debug)]
+impl Default for Task {
+    fn default() -> Self {
+        let mut id_generator_bucket = SnowflakeIdBucket::new(1, 1);
+        let local_time = Local::now();
+        Self {
+            id: id_generator_bucket.get_id(),
+            content: "".to_string(),
+            state: TaskState::default(),
+            comments: None,
+            create_time: local_time.format("%Y-%m-%d %H:%M:%S").to_string(),
+            update_time: local_time.format("%Y-%m-%d %H:%M:%S").to_string(),
+            deadline: None,
+            child_tasks: Vec::new(),
+            parent_tasks: Vec::new(),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 struct TaskGroup {
     group_name: String,
     tasks: Vec<Task>,
@@ -32,7 +54,7 @@ impl TaskGroup {
     fn new(group_name: String) -> Self {
         Self {
             group_name,
-            tasks: Vec::new()
+            tasks: Vec::new(),
         }
     }
     // fn import(group_name: String) -> Self {
@@ -41,66 +63,70 @@ impl TaskGroup {
     //         tasks: Vec::new()
     //     }
     // }
-    fn add(&mut self, content: String, comments: Option<String>, deadline: Option<String>) {
-       self.tasks.push(Task {
-            content,
-            state: TaskState::Todo,
-            comments,
-            create_time: Local::now(),
-            update_time: Local::now(),
-            deadline,
-            child_tasks: Vec::new(),
-            parent_tasks: Vec::new(),
-       });
+    // fn add(&mut self, content: String, comments: Option<String>, deadline: Option<String>) {
+    fn add(&mut self, task: Task) {
+        self.tasks.push(task);
     }
-    fn delete(&mut self, content: String) -> Result<&str, &str> {
+    fn delete(&mut self, content: String) -> Result<(), &str> {
         for (index, task) in self.tasks.iter().enumerate() {
             if task.content == content {
                 self.tasks.remove(index);
-                return Ok("Delete well");
+                return Ok(());
             }
         }
         Err("Task not found")
     }
-    fn change_state(&mut self, content: String, state: TaskState) -> Result<&str, &str>{
+    fn change_state(&mut self, content: String, state: TaskState) -> Result<(), &str> {
         for (index, task) in self.tasks.iter().enumerate() {
             if task.content == content {
                 self.tasks[index].state = state;
-                self.tasks[index].update_time = Local::now();
-                return Ok("Task changed");
+                let local_time = Local::now();
+                self.tasks[index].update_time = local_time.format("%Y-%m-%d %H:%M:%S").to_string();
+                return Ok(());
             }
         }
         Err("Task not found")
-
     }
 }
 
-fn main() {
+fn main() -> Result<(), ()> {
     let mut task_groups = HashMap::new();
-    task_groups.insert(String::from("homeless"), TaskGroup::new("homeless".to_owned()));
-    match task_groups.get_mut("homeless") {
-        Some(group) => group.add("content".to_owned(), None, None),
-        None => ()
+    task_groups.insert(
+        String::from("homeless"),
+        TaskGroup::new("homeless".to_owned()),
+    );
+    if let Some(group) = task_groups.get_mut("homeless") {
+        group.add(Task {
+            content: "fasfdsasf".to_owned(),
+            ..Default::default()
+        })
+    }
+    if let Some(group) = task_groups.get_mut("homeless") {
+        group.add(Task {
+            content: "content".to_owned(),
+            ..Default::default()
+        })
     }
     println!("{:?}", task_groups.get("homeless"));
-    match task_groups.get_mut("homeless") {
+    if let Some(group) = task_groups.get_mut("homeless") {
+        group
+            .change_state("content".to_owned(), TaskState::Abandon)
+            .unwrap();
+    }
+    println!("{:?}", task_groups.get("homeless"));
+    if let Some(group) = task_groups.get_mut("homeless") {
+        group.delete("content".to_owned()).unwrap();
+    }
+    println!("{:?}", task_groups.get("homeless"));
+    match task_groups.get("homeless") {
         Some(group) => {
-            match group.change_state("content".to_owned(), TaskState::Abandon) {
-                Ok(success) => println!("{}", success),
-                Err(error) => println!("{}", error)
-            }
-        },
-        None => ()
+            let j = serde_json::to_string(group).unwrap();
+            let mut f = File::create("./tasks.json").unwrap();
+            to_writer_pretty(f, &j).unwrap();
+            println!("{:?}", j);
+        }
+        None => (),
     }
-    println!("{:?}", task_groups.get("homeless"));
-    match task_groups.get_mut("homeless") {
-        Some(group) => {
-            match group.delete("cotent".to_owned()) {
-                Ok(success) => println!("{:?}", success),
-                Err(error) => println!("{:?}", error)
-            }
-        },
-        None => ()
-    }
-    println!("{:?}", task_groups.get("homeless"));
+
+    Ok(())
 }
