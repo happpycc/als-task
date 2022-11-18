@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use chrono::prelude::{DateTime, Local};
-use std::io;
+// use std::io;
 
 #[derive(Debug)]
 enum TaskState{
@@ -11,12 +11,15 @@ enum TaskState{
 
 #[derive(Debug)]
 struct Task {
+    // id: i32,
     content: String,
     state: TaskState,
     comments: Option<String>,
     create_time: DateTime<Local>,
     update_time: DateTime<Local>,
     deadline: Option<String>,
+    child_tasks: Vec<Task>,
+    parent_tasks: Vec<Task>,
 }
 
 #[derive(Debug)]
@@ -46,13 +49,15 @@ impl TaskGroup {
             create_time: Local::now(),
             update_time: Local::now(),
             deadline,
+            child_tasks: Vec::new(),
+            parent_tasks: Vec::new(),
        });
     }
     fn delete(&mut self, content: String) -> Result<&str, &str> {
         for (index, task) in self.tasks.iter().enumerate() {
             if task.content == content {
                 self.tasks.remove(index);
-                return Ok("Delete well")
+                return Ok("Delete well");
             }
         }
         Err("Task not found")
@@ -61,7 +66,8 @@ impl TaskGroup {
         for (index, task) in self.tasks.iter().enumerate() {
             if task.content == content {
                 self.tasks[index].state = state;
-                return Ok("Task changed")
+                self.tasks[index].update_time = Local::now();
+                return Ok("Task changed");
             }
         }
         Err("Task not found")
