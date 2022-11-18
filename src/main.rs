@@ -1,6 +1,6 @@
 use chrono::prelude::Local;
 use serde::{Deserialize, Serialize};
-use serde_json::to_writer_pretty;
+use serde_json::{to_writer_pretty, to_string_pretty};
 use snowflake::SnowflakeIdBucket;
 use std::collections::HashMap;
 use std::fs::File;
@@ -120,10 +120,10 @@ fn main() -> Result<(), ()> {
     println!("{:?}", task_groups.get("homeless"));
     match task_groups.get("homeless") {
         Some(group) => {
-            let j = serde_json::to_string(group).unwrap();
+            let j = to_string_pretty(group).unwrap();
             let f = File::create("./tasks.json").unwrap();
             to_writer_pretty(f, &j).unwrap();
-            println!("{:?}", j);
+            println!("{}", j);
         }
         None => (),
     }
