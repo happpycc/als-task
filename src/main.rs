@@ -121,7 +121,7 @@ fn main() -> Result<(), ()> {
     match task_groups.get("homeless") {
         Some(group) => {
             let j = serde_json::to_string(group).unwrap();
-            let mut f = File::create("./tasks.json").unwrap();
+            let f = File::create("./tasks.json").unwrap();
             to_writer_pretty(f, &j).unwrap();
             println!("{:?}", j);
         }
