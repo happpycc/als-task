@@ -1,6 +1,6 @@
 use chrono::prelude::Local;
 use serde::{Deserialize, Serialize};
-use serde_json::{to_writer_pretty, to_string_pretty};
+use serde_json::{to_writer_pretty, to_value, from_reader};
 use snowflake::SnowflakeIdBucket;
 use std::collections::HashMap;
 use std::fs::File;
@@ -44,6 +44,10 @@ impl Default for Task {
     }
 }
 
+impl Task {
+
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 struct TaskGroup {
     group_name: String,
@@ -64,9 +68,6 @@ impl TaskGroup {
     //     }
     // }
     // fn add(&mut self, content: String, comments: Option<String>, deadline: Option<String>) {
-    fn add(&mut self, task: Task) {
-        self.tasks.push(task);
-    }
     fn delete(&mut self, content: String) -> Result<(), &str> {
         for (index, task) in self.tasks.iter().enumerate() {
             if task.content == content {
@@ -89,44 +90,44 @@ impl TaskGroup {
     }
 }
 
+fn import_tasks(path: &str) -> HashMap<String, TaskGroup> {
+    let f = File::open(path).unwrap();
+    from_reader(f).unwrap()
+}
+
+fn save_tasks(path: &str, task_groups: HashMap<String, TaskGroup>) {
+    let j = to_value(task_groups).unwrap();
+    let f = File::create(path).unwrap();
+    to_writer_pretty(f, &j).unwrap();
+}
+
 fn main() -> Result<(), ()> {
-    let mut task_groups = HashMap::new();
-    task_groups.insert(
-        String::from("homeless"),
-        TaskGroup::new("homeless".to_owned()),
-    );
+    let mut task_groups = import_tasks("./tasks.json");
     if let Some(group) = task_groups.get_mut("homeless") {
-        group.add(Task {
-            content: "fasfdsasf".to_owned(),
+        group.tasks[0].child_tasks.push(Task {
+            content: "fasdfasdfasd".to_owned(),
             ..Default::default()
         })
     }
-    if let Some(group) = task_groups.get_mut("homeless") {
-        group.add(Task {
-            content: "content".to_owned(),
-            ..Default::default()
-        })
-    }
-    println!("{:?}", task_groups.get("homeless"));
-    if let Some(group) = task_groups.get_mut("homeless") {
-        group
-            .change_state("content".to_owned(), TaskState::Abandon)
-            .unwrap();
-    }
-    println!("{:?}", task_groups.get("homeless"));
-    if let Some(group) = task_groups.get_mut("homeless") {
-        group.delete("content".to_owned()).unwrap();
-    }
-    println!("{:?}", task_groups.get("homeless"));
-    match task_groups.get("homeless") {
-        Some(group) => {
-            let j = to_string_pretty(group).unwrap();
-            let f = File::create("./tasks.json").unwrap();
-            to_writer_pretty(f, &j).unwrap();
-            println!("{}", j);
-        }
-        None => (),
-    }
+    // task_groups.insert(
+    //     String::from("homeless"),
+    //     TaskGroup::new("homeless".to_owned()),
+    // );
+    // if let Some(group) = task_groups.get_mut("homeless") {
+    //     group.add(Task {
+    //         content: "fasfdsasf".to_owned(),
+    //         ..Default::default()
+    //     });
+    //     group.add(Task {
+    //         content: "content".to_owned(),
+    //         ..Default::default()
+    //     });
+    //     group
+    //         .change_state("content".to_owned(), TaskState::Abandon)
+    //         .unwrap();
+    //     group.delete("content".to_owned()).unwrap();
+    // }
+    save_tasks("./tasks.json", task_groups);
 
     Ok(())
 }
