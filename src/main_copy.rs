@@ -1,9 +1,8 @@
 use chrono::prelude::Local;
-use serde::{Deserialize, Serialize};
-use serde_json::{to_writer_pretty, to_value, from_reader};
 use snowflake::SnowflakeIdBucket;
-use std::collections::HashMap;
+use serde_json::{to_writer_pretty, to_value, from_reader};
 use std::fs::File;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 enum TaskState {
@@ -23,7 +22,6 @@ struct Task {
     update_time: String,
     deadline: Option<String>,
     child_tasks: Vec<Task>,
-    parent_tasks: Vec<Task>,
 }
 
 impl Default for Task {
@@ -39,7 +37,6 @@ impl Default for Task {
             update_time: local_time.format("%Y-%m-%d %H:%M:%S").to_string(),
             deadline: None,
             child_tasks: Vec::new(),
-            parent_tasks: Vec::new(),
         }
     }
 }
@@ -50,14 +47,12 @@ impl Task {
 
 #[derive(Debug, Deserialize, Serialize)]
 struct TaskGroup {
-    group_name: String,
     tasks: Vec<Task>,
 }
 
 impl TaskGroup {
-    fn new(group_name: String) -> Self {
+    fn new() -> Self {
         Self {
-            group_name,
             tasks: Vec::new(),
         }
     }
@@ -83,13 +78,71 @@ impl TaskGroup {
     }
 }
 
-pub fn import_tasks(path: &str) -> HashMap<String, TaskGroup> {
+fn import_tasks(path: &str) -> TaskGroup {
     let f = File::open(path).unwrap();
     from_reader(f).unwrap()
 }
 
-pub fn save_tasks(path: &str, task_groups: HashMap<String, TaskGroup>) {
+fn save_tasks(path: &str, task_groups: TaskGroup) {
     let j = to_value(task_groups).unwrap();
     let f = File::create(path).unwrap();
     to_writer_pretty(f, &j).unwrap();
+}
+
+fn show_tasks(task: &Task, depth: i64) {
+    let mut depth_temp = depth;
+    while depth_temp > 0 {
+        depth_temp = depth_temp - 1;
+        print!("\t");
+    }
+    println!("{}", task.content);
+    if task.child_tasks.len() == 0 {
+        return;
+    }
+    for child_task in &task.child_tasks {
+        show_tasks(&child_task, depth + 1)
+    }
+    
+}
+
+fn main() -> Result<(), ()> {
+    let mut task_group = import_tasks("./tasks.json");
+    task_group.tasks[0].child_tasks.push(Task {
+        content: "eeeeeeeeeeeeeeee".to_owned(),
+        ..Default::default()
+    });
+    task_group.tasks[0].child_tasks[0].child_tasks.push(Task {
+        content: "hhhhhhhhhhhhhhhhhhhhhhhhh".to_owned(),
+        ..Default::default()
+    });
+    task_group.tasks[1].child_tasks.push(Task {
+        content: "ggggggggggggggggg".to_owned(),
+        ..Default::default()
+    });
+    for task in &task_group.tasks {
+        show_tasks(task, 0);
+    }
+
+    // println!("{:?}", task_groups);
+    // task_groups.insert(
+    //     String::from("homeless"),
+    //     TaskGroup::new("homeless".to_owned()),
+    // );
+    // if let Some(group) = task_groups.get_mut("homeless") {
+    //     group.add(Task {
+    //         content: "fasfdsasf".to_owned(),
+    //         ..Default::default()
+    //     });
+    //     group.add(Task {
+    //         content: "content".to_owned(),
+    //         ..Default::default()
+    //     });
+    //     group
+    //         .change_state("content".to_owned(), TaskState::Abandon)
+    //         .unwrap();
+    //     group.delete("content".to_owned()).unwrap();
+    // }
+    // save_tasks("./tasks.json", task_groups);
+
+    Ok(())
 }
