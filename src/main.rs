@@ -89,7 +89,9 @@ struct App {
     scroll_vertical: u16,
     scroll_horizontal: u16,
 
-    window_rect: Rect
+    window_rect: Rect,
+
+    showing_index: usize,
 }
 
 impl App {
@@ -158,25 +160,30 @@ impl App {
             scroll_horizontal: 0,
             scroll_vertical: 0,
             window_rect: Rect::default(),
+            showing_index: 0,
         }
     }
 
-    fn scroll_up(&mut self) {
-        if self.scroll_vertical == 0 {
-            self.scroll_vertical = self.tasks.len() as u16 -  self.window_rect.height + 2;
-        } else {
-            self.scroll_vertical -= 1;
-        }
-    }
+    // fn scroll_up(&mut self) {
+    //     if self.scroll_vertical == 0 {
+    //         self.scroll_vertical = self.tasks.len() as u16 -  self.window_rect.height + 2;
+    //     } else {
+    //         if self.index as i16 + self.window_rect.height as i16 - 2 - 1 > self.tasks.len() as i16 {
+    //             self.scroll_vertical -= 1;
+    //         }
+    //     }
+    // }
 
-    fn scroll_down(&mut self) {
-        if self.scroll_vertical == self.tasks.len() as u16 - self.window_rect.height + 2 {
-            self.scroll_vertical = 0;
-        }
-        else {
-            self.scroll_vertical += 1;
-        }
-    }
+    // fn scroll_down(&mut self) {
+    //     if self.index == self.tasks.len() as u16 {
+    //         self.scroll_vertical = 0;
+    //     }
+    //     else {
+    //         if self.index as i16 - self.window_rect.height as i16 + 2 + 1 > 0 {
+    //             self.scroll_vertical += 1;
+    //         }
+    //     }
+    // }
 
     fn scroll_left(&mut self) {
         self.scroll_horizontal -= 1;
@@ -209,14 +216,40 @@ impl App {
     }
 
     fn next(&mut self) {
-        self.index = (self.index + 1) % self.tasks.len();
+        if self.index == self.tasks.len() - 1 {
+            self.index = 0;
+            self.showing_index = self.index;
+            self.scroll_vertical = 0;
+            return;
+        }
+        match (self.index + 1) as u16 % (self.window_rect.height - 2) {
+            0 => {
+                self.scroll_vertical += 1;
+                self.index += 1;
+            },
+            _ => {
+                self.index += 1;
+                self.showing_index += 1;
+            },
+        }
     }
 
     fn previous(&mut self) {
-        if self.index > 0 {
-            self.index -= 1;
-        } else {
+        if self.index == 0 {
             self.index = self.tasks.len() - 1;
+            self.showing_index = self.index;
+            self.scroll_vertical = self.tasks.len() as u16 - self.window_rect.height + 2;
+            return;
+        }
+        match (self.index + 1) as u16 % (self.window_rect.height - 2) {
+            1 => {
+                self.scroll_vertical -= 1;
+                self.index -= 1;
+            },
+            _ => {
+                self.index -= 1;
+                self.showing_index -= 1;
+            } 
         }
     }
 }
@@ -260,8 +293,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
         if let Event::Key(key) = event::read()? {
             match app.input_mode {
                 InputMode::Normal => match key.code {
-                    KeyCode::Char('h') | KeyCode::Char('k') | KeyCode::Up => { app.previous(); app.scroll_up(); },
-                    KeyCode::Char('l') | KeyCode::Char('j') | KeyCode::Down => { app.next(); app.scroll_down(); },
+                    KeyCode::Char('h') | KeyCode::Char('k') | KeyCode::Up => { app.previous(); },
+                    KeyCode::Char('l') | KeyCode::Char('j') | KeyCode::Down => { app.next(); },
                     KeyCode::Char(' ') => app.tasks[app.index].todo_or_done(),
                     KeyCode::Char('x') => app.tasks[app.index].abandon(),
                     KeyCode::Char('q') => return Ok(()),
