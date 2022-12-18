@@ -8,7 +8,7 @@ use crossterm::{
 use std::{error::Error, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment},
+    layout::{Alignment, Rect},
     style::{Color, Style},
     text::{Span, Spans},
     widgets::{Block, BorderType, Borders, Paragraph},
@@ -85,19 +85,108 @@ struct App {
     index: usize,
     // Current input mode
     input_mode: InputMode,
+
+    scroll_vertical: u16,
+    scroll_horizontal: u16,
+
+    window_rect: Rect
 }
 
 impl App {
     fn new() -> App {
-        let task1 = Task { content: "Have breakfast".to_string(), ..Default::default() };
-        let task2 = Task { content: "Have lunch".to_string(), depth: 1, ..Default::default()};
-        let task3 = Task { content: "Have dinner".to_string(), ..Default::default()};
-        let task4 = Task { content: "Do homework".to_string(), ..Default::default()};
         App {
-            tasks: vec![task1, task2, task3, task4],
+            tasks: vec![
+                Task {content: "asdf_begin".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf".to_string(), ..Default::default()},
+                Task {content: "asdf_end".to_string(), ..Default::default()},
+            ],
             index: 0,
             input_mode: InputMode::Normal,
+            scroll_horizontal: 0,
+            scroll_vertical: 0,
+            window_rect: Rect::default(),
         }
+    }
+
+    fn scroll_up(&mut self) {
+        if self.scroll_vertical == 0 {
+            self.scroll_vertical = self.tasks.len() as u16 -  self.window_rect.height + 2;
+        } else {
+            self.scroll_vertical -= 1;
+        }
+    }
+
+    fn scroll_down(&mut self) {
+        if self.scroll_vertical == self.tasks.len() as u16 - self.window_rect.height + 2 {
+            self.scroll_vertical = 0;
+        }
+        else {
+            self.scroll_vertical += 1;
+        }
+    }
+
+    fn scroll_left(&mut self) {
+        self.scroll_horizontal -= 1;
+        self.scroll_horizontal %= 10;
+
+    }
+
+    fn scroll_right(&mut self) {
+        self.scroll_horizontal += 1;
+        self.scroll_horizontal %= 10;
     }
 
     fn edit_finished(&mut self) {
@@ -162,13 +251,17 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
     loop {
-        terminal.draw(|f| ui(f, &app))?;
+        terminal.draw(|f| {
+            app.window_rect = f.size();
+            app.tasks[1].content = format!("{:?}", app.window_rect);
+            ui(f, &app);
+        })?;
 
         if let Event::Key(key) = event::read()? {
             match app.input_mode {
                 InputMode::Normal => match key.code {
-                    KeyCode::Char('h') | KeyCode::Char('k') | KeyCode::Up => app.previous(),
-                    KeyCode::Char('l') | KeyCode::Char('j') | KeyCode::Down => app.next(),
+                    KeyCode::Char('h') | KeyCode::Char('k') | KeyCode::Up => { app.previous(); app.scroll_up(); },
+                    KeyCode::Char('l') | KeyCode::Char('j') | KeyCode::Down => { app.next(); app.scroll_down(); },
                     KeyCode::Char(' ') => app.tasks[app.index].todo_or_done(),
                     KeyCode::Char('x') => app.tasks[app.index].abandon(),
                     KeyCode::Char('q') => return Ok(()),
@@ -232,6 +325,8 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .title("Task tool designed by alonescar")
         .title_alignment(Alignment::Center)
         .border_type(BorderType::Rounded);
-    let paragraph = Paragraph::new(texts.clone()).block(block);
+    let paragraph = Paragraph::new(texts.clone())
+        .block(block)
+        .scroll((app.scroll_vertical, app.scroll_horizontal));
     f.render_widget(paragraph, size);
 }
