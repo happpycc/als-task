@@ -8,7 +8,7 @@ use crossterm::{
 use std::{error::Error, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Rect},
+    layout::{Alignment},
     style::{Color, Style},
     text::{Span, Spans},
     widgets::{Block, BorderType, Borders, Paragraph},
@@ -85,115 +85,16 @@ struct App {
     index: usize,
     // Current input mode
     input_mode: InputMode,
-
-    scroll_vertical: u16,
-    scroll_horizontal: u16,
-
-    window_rect: Rect,
-
-    showing_index: usize,
 }
 
 impl App {
     fn new() -> App {
         App {
             tasks: vec![
-                Task {content: "asdf_begin".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf".to_string(), ..Default::default()},
-                Task {content: "asdf_end".to_string(), ..Default::default()},
             ],
             index: 0,
             input_mode: InputMode::Normal,
-            scroll_horizontal: 0,
-            scroll_vertical: 0,
-            window_rect: Rect::default(),
-            showing_index: 0,
         }
-    }
-
-    // fn scroll_up(&mut self) {
-    //     if self.scroll_vertical == 0 {
-    //         self.scroll_vertical = self.tasks.len() as u16 -  self.window_rect.height + 2;
-    //     } else {
-    //         if self.index as i16 + self.window_rect.height as i16 - 2 - 1 > self.tasks.len() as i16 {
-    //             self.scroll_vertical -= 1;
-    //         }
-    //     }
-    // }
-
-    // fn scroll_down(&mut self) {
-    //     if self.index == self.tasks.len() as u16 {
-    //         self.scroll_vertical = 0;
-    //     }
-    //     else {
-    //         if self.index as i16 - self.window_rect.height as i16 + 2 + 1 > 0 {
-    //             self.scroll_vertical += 1;
-    //         }
-    //     }
-    // }
-
-    fn scroll_left(&mut self) {
-        self.scroll_horizontal -= 1;
-        self.scroll_horizontal %= 10;
-
-    }
-
-    fn scroll_right(&mut self) {
-        self.scroll_horizontal += 1;
-        self.scroll_horizontal %= 10;
     }
 
     fn edit_finished(&mut self) {
@@ -211,46 +112,24 @@ impl App {
 
     fn add_brother_task(&mut self) {
         self.input_mode = InputMode::Editing;
-        self.tasks.insert(self.index + 1, Task { depth: self.tasks[self.index].depth, ..Default::default() });
-        self.index += 1;
+        self.tasks.insert(if self.tasks.len() == 0 {0} else {self.index + 1}, Task { depth: if self.tasks.len() == 0 {0} else {self.tasks[self.index].depth}, ..Default::default() });
+        self.index += if self.tasks.len() - 1 == 0 {0} else {1};
     }
 
     fn next(&mut self) {
         if self.index == self.tasks.len() - 1 {
             self.index = 0;
-            self.showing_index = self.index;
-            self.scroll_vertical = 0;
             return;
         }
-        match (self.index + 1) as u16 % (self.window_rect.height - 2) {
-            0 => {
-                self.scroll_vertical += 1;
-                self.index += 1;
-            },
-            _ => {
-                self.index += 1;
-                self.showing_index += 1;
-            },
-        }
+        self.index += 1;
     }
 
     fn previous(&mut self) {
         if self.index == 0 {
             self.index = self.tasks.len() - 1;
-            self.showing_index = self.index;
-            self.scroll_vertical = self.tasks.len() as u16 - self.window_rect.height + 2;
             return;
         }
-        match (self.index + 1) as u16 % (self.window_rect.height - 2) {
-            1 => {
-                self.scroll_vertical -= 1;
-                self.index -= 1;
-            },
-            _ => {
-                self.index -= 1;
-                self.showing_index -= 1;
-            } 
-        }
+        self.index -= 1;
     }
 }
 
@@ -285,8 +164,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
     loop {
         terminal.draw(|f| {
-            app.window_rect = f.size();
-            app.tasks[1].content = format!("{:?}", app.window_rect);
             ui(f, &app);
         })?;
 
@@ -334,23 +211,65 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
             )
         }
     }
-    let texts: Vec<Spans> = app
-        .tasks
-        .iter()
-        .enumerate()
-        .map(|(index, task)| {
-            let mut text_style = Style::default().fg(Color::White).bg(Color::Reset);
-            if app.index == index {
-                text_style = Style::default().fg(Color::Black).bg(Color::White);
-            }
-            Spans::from(vec![
-                Span::raw(format!("{:1$}", "", (task.depth * 4) as usize)),
-                Span::raw(format!("{:?} ", task.state)),
-                Span::styled(task.content.as_str(), text_style),
-            ])
-        })
-        .collect();
     let size = f.size();
+    let can_showed_num = size.height as usize - 2;
+    let tasks_len = app.tasks.len();
+    let mut begin: usize;
+    let mut end: usize;
+    let mut highlight_index: usize;
+
+    // within window
+    if can_showed_num >= tasks_len {
+        begin = 0;
+        end = tasks_len;
+        highlight_index = app.index;
+    } else {
+    // out of window
+        if app.index as isize <= can_showed_num as isize / 2 - 1 {
+            begin = 0;
+            end = can_showed_num;
+            highlight_index = app.index
+        } else if tasks_len - can_showed_num + can_showed_num / 2 <= app.index {
+            begin = tasks_len - can_showed_num;
+            end = tasks_len;
+            highlight_index = app.index - (tasks_len - can_showed_num);
+        }
+        else {
+            if can_showed_num > 1 {
+                if can_showed_num % 2 == 0 {
+                    begin = app.index - (can_showed_num / 2 - 1);
+                    end = app.index + (can_showed_num / 2) + 1;
+                    highlight_index = can_showed_num / 2 - 1;
+                } else {
+                    begin = app.index - (can_showed_num - 1) / 2;
+                    end = app.index + (can_showed_num - 1) / 2 + 1;
+                    highlight_index = (can_showed_num + 1) / 2 - 1;
+                }
+            } else {
+                begin = app.index;
+                end = app.index + 1;
+                highlight_index = 0;
+            }
+        }
+    }
+
+    let texts: Vec<Spans> = 
+    app
+    .tasks[begin..end]
+    .iter()
+    .enumerate()
+    .map(|(index, task)| {
+        let mut text_style = Style::default().fg(Color::White).bg(Color::Reset);
+        if highlight_index == index {
+            text_style = Style::default().fg(Color::Black).bg(Color::White);
+        }
+        Spans::from(vec![
+            Span::raw(format!("{:1$}", "", (task.depth * 4) as usize)),
+            Span::raw(format!("{:?} ", task.state)),
+            Span::styled(task.content.as_str(), text_style),
+        ])
+    })
+    .collect();
 
     // Surrounding block
     let block = Block::default()
@@ -359,7 +278,6 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .title_alignment(Alignment::Center)
         .border_type(BorderType::Rounded);
     let paragraph = Paragraph::new(texts.clone())
-        .block(block)
-        .scroll((app.scroll_vertical, app.scroll_horizontal));
+        .block(block);
     f.render_widget(paragraph, size);
 }
