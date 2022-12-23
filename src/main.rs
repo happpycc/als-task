@@ -3,15 +3,16 @@ use chrono::prelude::Local;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen}, style::Stylize,
 };
+use tui_textarea::{TextArea, CursorMove};
 use std::{error::Error, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{Span, Spans},
-    widgets::{Block, BorderType, Borders, Paragraph},
+    widgets::{Block, BorderType, Borders, Paragraph, Clear},
     Frame, Terminal,
 };
 use unicode_width::UnicodeWidthStr;
@@ -71,6 +72,7 @@ impl Task {
     fn abandon(&mut self) {
         self.state = TaskState::Abandon;
     }
+
 }
 
 impl Default for Task {
@@ -85,28 +87,32 @@ struct App {
     index: usize,
     // Current input mode
     input_mode: InputMode,
+    window_rect: Rect,
 }
 
 impl App {
     fn new() -> App {
         App {
-            tasks: vec![
-            ],
+            tasks: vec![],
             index: 0,
             input_mode: InputMode::Normal,
+            window_rect: Rect::default(),
         }
     }
 
-    fn edit_finished(&mut self) {
+    fn edit_finished(&mut self, content: &[String]) {
+        let content = &content[0];
         self.input_mode = InputMode::Normal;
-        if self.tasks[self.index].content == "".to_string() {
+        if content == "" || format!("{:?} ", self.tasks[self.index].state).len() as u16 + content.width() as u16 + (self.tasks[self.index].depth * 4) as u16 > self.window_rect.width {
             self.edit_abandon();
+        } else {
+            self.tasks[self.index].content = content.to_string();
         }
     }
 
     fn edit_abandon(&mut self) {
         self.tasks.remove(self.index);
-        self.index -= 1;
+        self.index -= if self.index == 0 {0} else {1};
         self.input_mode = InputMode::Normal;
     }
 
@@ -114,6 +120,19 @@ impl App {
         self.input_mode = InputMode::Editing;
         self.tasks.insert(if self.tasks.len() == 0 {0} else {self.index + 1}, Task { depth: if self.tasks.len() == 0 {0} else {self.tasks[self.index].depth}, ..Default::default() });
         self.index += if self.tasks.len() - 1 == 0 {0} else {1};
+    }
+
+    fn add_child_task(&mut self) {
+        self.input_mode = InputMode::Editing;
+        self.tasks.insert(if self.tasks.len() == 0 {0} else {self.index + 1}, Task { depth: if self.tasks.len() == 0 {0} else {self.tasks[self.index].depth + 1}, ..Default::default() });
+        self.index += if self.tasks.len() - 1 == 0 {0} else {1};
+    }
+
+    fn delete_task(&mut self) {
+        if self.tasks.len() != 0 {
+            self.tasks.remove(self.index);
+            self.index -= if self.index == 0 {0} else {1};
+        }
     }
 
     fn next(&mut self) {
@@ -162,9 +181,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
+    let mut textarea = TextArea::default();
+
     loop {
         terminal.draw(|f| {
-            ui(f, &app);
+            ui(f, &app, &mut textarea);
+            app.window_rect = f.size();
         })?;
 
         if let Event::Key(key) = event::read()? {
@@ -174,44 +196,51 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                     KeyCode::Char('l') | KeyCode::Char('j') | KeyCode::Down => { app.next(); },
                     KeyCode::Char(' ') => app.tasks[app.index].todo_or_done(),
                     KeyCode::Char('x') => app.tasks[app.index].abandon(),
+                    KeyCode::Char('d') => app.delete_task(),
                     KeyCode::Char('q') => return Ok(()),
-                    KeyCode::Enter => app.add_brother_task(),
+                    KeyCode::Enter => { app.add_brother_task(); textarea.delete_line_by_head(); },
+                    KeyCode::Tab => { app.add_child_task(); textarea.delete_line_by_head(); },
                     _ => {}
                 },
                 InputMode::Editing => match key.code {
-                    KeyCode::Enter => app.edit_finished(),
+                    KeyCode::Enter => app.edit_finished(textarea.lines()),
                     KeyCode::Esc => app.edit_abandon(),
-                    KeyCode::Char(c) => {
-                        if app.tasks[app.index].content.width() < 30 {
-                            app.tasks[app.index].content.push(c)
-                        }
-                    },
-                    KeyCode::Backspace => { app.tasks[app.index].content.pop(); },
-                    _ => {}
+                    _ => {textarea.input(key);},
                 }
             }
         }
     }
 }
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Length(3),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(r);
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(popup_layout[1])[1]
+}
+fn ui<B: Backend>(f: &mut Frame<B>, app: &App, textarea: &mut TextArea) {
+    let size = f.size();
     // Wrapping block for a group
     // Just draw the block and the group on the same area and build the group
     // with at least a margin of 1
-    match app.input_mode {
-        // Hide the cursor. `Frame` does this by default, so we don't need to do anything here
-        InputMode::Normal => {},
-        InputMode::Editing => {
-            // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
-            f.set_cursor(
-                // Put cursor past the end of the input text
-                app.tasks[app.index].content.width() as u16 + (app.tasks[app.index].depth * 4) as u16 + format!("{:?} ", app.tasks[app.index].state).len() as u16 + 1,
-                // Move one line down, from the border to the input line
-                app.index as u16 + 1,
-            )
-        }
-    }
-    let size = f.size();
     let can_showed_num = size.height as usize - 2;
     let tasks_len = app.tasks.len();
     let mut begin: usize;
@@ -280,4 +309,18 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     let paragraph = Paragraph::new(texts.clone())
         .block(block);
     f.render_widget(paragraph, size);
+
+    match app.input_mode {
+        // Hide the cursor. `Frame` does this by default, so we don't need to do anything here
+        InputMode::Normal => {},
+        InputMode::Editing => {
+            let area = centered_rect(60, 12, size);
+            textarea.set_block(
+                Block::default()
+                    .borders(Borders::all())
+            );
+            f.render_widget(Clear, area); //this clears out the background
+            f.render_widget(textarea.widget(), area);
+        }
+    }
 }

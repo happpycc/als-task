@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 tui = "0.19"
+tui-textarea = "*"
 crossterm = "0.25"
 chrono = "0.4"
 rs-snowflake = "*"
