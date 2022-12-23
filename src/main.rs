@@ -3,9 +3,9 @@ use chrono::prelude::Local;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen}, style::Stylize,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use tui_textarea::{TextArea, CursorMove};
+use tui_textarea::TextArea;
 use std::{error::Error, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
