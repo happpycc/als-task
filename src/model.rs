@@ -1,4 +1,6 @@
 use tui::layout::Rect;
+use rusqlite::Connection;
+
 
 #[derive(Debug, Default)]
 pub enum TaskState {
@@ -23,7 +25,6 @@ pub struct Task {
     pub create_time: String,
     pub update_time: String,
     pub dead_time: Option<String>,
-    pub prev_task: Option<i64>,
     pub next_task: Option<i64>
 }
 
@@ -34,4 +35,6 @@ pub struct App {
     // Current input mode
     pub input_mode: InputMode,
     pub window_rect: Rect,
+    pub scroll: u16,
+    pub conn: Connection,
 }

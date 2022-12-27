@@ -8,6 +8,7 @@ use tui::{
     backend::CrosstermBackend,
     Terminal,
 };
+use rusqlite::{Connection, Result};
 
 mod operation;
 mod model;
