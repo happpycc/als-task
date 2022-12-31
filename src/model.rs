@@ -1,8 +1,7 @@
-use tui::layout::Rect;
 use rusqlite::Connection;
+use tui::layout::Rect;
 
-
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub enum TaskState {
     Abandon,
     Done,
@@ -17,7 +16,7 @@ pub enum InputMode {
 
 #[derive(Debug)]
 pub struct Task {
-    pub task_id: i64,
+    pub task_id: usize,
     pub depth: u8,
     pub content: String,
     pub state: TaskState,
@@ -25,7 +24,6 @@ pub struct Task {
     pub create_time: String,
     pub update_time: String,
     pub dead_time: Option<String>,
-    pub next_task: Option<i64>
 }
 
 pub struct App {

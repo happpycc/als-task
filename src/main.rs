@@ -3,17 +3,14 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use std::{error::Error, io};
-use tui::{
-    backend::CrosstermBackend,
-    Terminal,
-};
-use rusqlite::{Connection, Result};
-
-mod operation;
-mod model;
-mod ui;
 use operation::run_app;
+use rusqlite::Result;
+use std::{error::Error, io};
+use tui::{backend::CrosstermBackend, Terminal};
+
+mod model;
+mod operation;
+mod ui;
 use model::App;
 
 fn main() -> Result<(), Box<dyn Error>> {
