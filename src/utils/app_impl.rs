@@ -24,7 +24,7 @@ impl App {
     pub fn edit_finished(&mut self, content: &[String]) {
         let content = &content[0];
         self.input_mode = InputMode::Normal;
-        if content == "" || format!("{:?} ", self.tasks[self.index].state).len() as u16 + content.width() as u16 + (self.tasks[self.index].depth * 4) as u16 > self.window_rect.width {
+        if content == "" || format!("{:?} ", self.tasks[self.index].state).len() as u16 + content.width() as u16 + (self.tasks[self.index].depth * 4) as u16 > 80 {
             self.edit_abandon();
         } else {
             self.tasks[self.index].content = content.to_string();
