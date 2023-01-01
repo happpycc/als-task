@@ -121,9 +121,9 @@ impl App {
         for index in self.index..self.tasks.len() {
             self.tasks[index].state = state;
             self.conn.execute("UPDATE tasks SET state = ?1 WHERE create_time = ?2", params![format!("{:?}", self.tasks[index].state), self.tasks[index].create_time]).unwrap();
-            if self.tasks[self.index].depth == self.tasks[index + 1].depth {
+            if self.tasks[self.index].depth == self.tasks[index + if index == self.tasks.len() - 1 {0} else {1}].depth {
                 return;
-            } else if self.tasks[index + 1].depth < self.tasks[self.index].depth {
+            } else if self.tasks[index + if index == self.tasks.len() - 1 {0} else {1}].depth < self.tasks[self.index].depth {
                 return;
             }
         }
