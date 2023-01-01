@@ -113,10 +113,14 @@ impl App {
 
     pub fn change_state(&mut self, state: TaskState) {
         if self.tasks.len() == 0 {return;}
-        else if self.index + 1 == self.tasks.len() {return self.tasks[self.index].state = state;}
+        else if self.index + 1 == self.tasks.len() {
+            self.tasks[self.index].state = state;
+            self.conn.execute("UPDATE tasks SET state = ?1 WHERE create_time = ?2", params![format!("{:?}", self.tasks[self.index].state), self.tasks[self.index].create_time]).unwrap();
+        }
         else if self.tasks[self.index + 1].depth == self.tasks[self.index].depth {return self.tasks[self.index].state = state;}
         for index in self.index..self.tasks.len() {
             self.tasks[index].state = state;
+            self.conn.execute("UPDATE tasks SET state = ?1 WHERE create_time = ?2", params![format!("{:?}", self.tasks[index].state), self.tasks[index].create_time]).unwrap();
             if self.tasks[self.index].depth == self.tasks[index + 1].depth {
                 return;
             } else if self.tasks[index + 1].depth < self.tasks[self.index].depth {
