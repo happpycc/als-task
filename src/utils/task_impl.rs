@@ -1,6 +1,6 @@
 use chrono::Local;
 
-use crate::model::{Task, TaskState};
+use crate::models::{Task, TaskState};
 
 impl Task {
     pub fn new() -> Self {

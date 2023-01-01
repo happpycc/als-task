@@ -4,7 +4,7 @@ use crossterm::event::{self, Event, KeyCode};
 use tui::{backend::Backend, Terminal};
 use tui_textarea::TextArea;
 
-use crate::{model::{App, InputMode, TaskState}, ui::ui};
+use crate::{models::{App, InputMode, TaskState}, ui::ui};
 
 
 pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
@@ -13,7 +13,8 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
     loop {
         terminal.draw(|f| {
             app.window_rect = f.size();
-            ui(f, &app, &mut textarea);
+            app.scroll_right_max = 0;
+            ui(f, &mut app, &mut textarea);
         })?;
 
         if let Event::Key(key) = event::read()? {
@@ -21,8 +22,8 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
                 InputMode::Normal => match key.code {
                     KeyCode::Char('k') | KeyCode::Up => app.previous(),
                     KeyCode::Char('j') | KeyCode::Down => app.next(),
-                    // KeyCode::Char('h') | KeyCode::Left => app.scroll_left(),
-                    // KeyCode::Char('l') | KeyCode::Right => app.scroll_right(),
+                    KeyCode::Char('h') | KeyCode::Left => app.scroll_left(),
+                    KeyCode::Char('l') | KeyCode::Right => app.scroll_right(),
                     KeyCode::Char(' ') => match app.tasks[app.index].state {
                         TaskState::Todo => app.change_state(TaskState::Done),
                         TaskState::Done => app.change_state(TaskState::Todo),

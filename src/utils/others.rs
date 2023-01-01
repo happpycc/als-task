@@ -1,6 +1,6 @@
 use rusqlite::Connection;
 
-use crate::model::{App, Task, TaskState};
+use crate::models::{App, Task, TaskState};
 
 pub fn get_showing_tasks(app: &App) -> (usize, usize, usize) {
     let begin: usize;

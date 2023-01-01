@@ -2,9 +2,9 @@ use rusqlite::params;
 use tui::layout::Rect;
 use unicode_width::UnicodeWidthStr;
 
-use crate::model::{App, InputMode, Task, TaskState};
+use crate::models::{App, InputMode, Task, TaskState};
 
-use crate::operations::others::{load_database, load_tasks};
+use crate::utils::others::{load_database, load_tasks};
 
 impl App {
     pub fn new() -> App {
@@ -17,9 +17,9 @@ impl App {
             window_rect: Rect::default(),
             scroll: 0,
             conn,
+            scroll_right_max: 0,
         }
     }
-
 
     pub fn edit_finished(&mut self, content: &[String]) {
         let content = &content[0];
@@ -56,27 +56,22 @@ impl App {
         self.input_mode = InputMode::Normal;
     }
 
-    fn get_next_brother_task(&self) -> usize {
+    fn get_next_brother_task(&self, current_depth: u8) -> usize {
         if self.tasks.len() == 0 {return 0;}
-        else if self.index + 1 == self.tasks.len() {return self.tasks.len();}
-        else if self.tasks[self.index + 1].depth == self.tasks[self.index].depth {return self.index + 1;}
+        if self.index == self.tasks.len() - 1 {return self.tasks.len();}
+        // else if self.tasks[self.index + 1].depth == self.tasks[self.index].depth {return self.index + 1;}
         for index in self.index + 1..self.tasks.len() {
-            if self.tasks[self.index].depth == self.tasks[index].depth {
-                return index;
-            } else if index == self.tasks.len() - 1 {
-                return index + 1;
-            } else if self.tasks[index].depth < self.tasks[self.index].depth {
-                return index;
-            }
+            if current_depth >= self.tasks[index].depth {return index;}
+            if index == self.tasks.len() - 1 {return index + 1;}
         }
         0
     }
 
     pub fn add_brother_task(&mut self) {
         self.input_mode = InputMode::Editing;
-        let old_index = self.index;
-        self.index = self.get_next_brother_task();
-        self.tasks.insert(self.index, Task { depth: if self.tasks.len() == 0 {0} else {self.tasks[old_index].depth}, ..Default::default()});
+        let current_depth = if self.tasks.len() == 0 {0} else {self.tasks[self.index].depth};
+        self.index = self.get_next_brother_task(current_depth);
+        self.tasks.insert(self.index, Task { depth: current_depth, ..Default::default()});
     }
 
     pub fn add_child_task(&mut self) {
@@ -146,11 +141,21 @@ impl App {
         self.index -= 1;
     }
 
-    // pub fn scroll_left(&mut self) {
-    //     self.scroll -= 1;
-    // }
+    pub fn scroll_left(&mut self) {
+        if self.scroll == 0 {
+            if self.scroll_right_max > 0 {self.scroll = self.scroll_right_max as u16}
+            else {self.scroll = 0}
+        }
+        else {self.scroll -= 1;}
+    }
 
-    // pub fn scroll_right(&mut self) {
-    //     self.scroll += 1;
-    // }
+    pub fn scroll_right(&mut self) {
+        if self.scroll_right_max > 0 {
+            if self.scroll as i16 == self.scroll_right_max {self.scroll = 0}
+            else {self.scroll += 1}
+        } else {self.scroll = 0}
+        // if self.scroll_right_max <= 0 {self.scroll = 0}
+        // else if self.scroll as i16 == self.scroll_right_max {self.scroll = 0}
+        // else {self.scroll += 1}
+    }
 }

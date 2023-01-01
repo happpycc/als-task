@@ -7,9 +7,10 @@ use tui::{
     Frame,
 };
 use tui_textarea::TextArea;
+use unicode_width::UnicodeWidthStr;
 
-use crate::model::InputMode;
-use crate::operation::get_showing_tasks;
+use crate::models::InputMode;
+use crate::utils::others::get_showing_tasks;
 use crate::App;
 
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
@@ -38,23 +39,24 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
         .split(popup_layout[1])[1]
 }
 
-pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App, textarea: &mut TextArea) {
+pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App, textarea: &mut TextArea) {
     let (begin, end, highlight_index) = get_showing_tasks(app);
-    // Wrapping block for a group
-    // Just draw the block and the group on the same area and build the group
-    // with at least a margin of 1
 
     let texts: Vec<Spans> = app.tasks[begin..end]
         .iter()
         .enumerate()
         .map(|(index, task)| {
+            let task_depth = format!("{:1$}", "", (task.depth * 4) as usize);
+            let task_state = format!("{:?} ", task.state);
+            let scroll_right_max = (task_depth.len() + task_state.len() + task.content.width()) as i16 - app.window_rect.width as i16 + 2;
+            if scroll_right_max > app.scroll_right_max {app.scroll_right_max = scroll_right_max}
             let mut text_style = Style::default().fg(Color::White).bg(Color::Reset);
             if highlight_index == index {
                 text_style = Style::default().fg(Color::Black).bg(Color::White);
             }
             Spans::from(vec![
-                Span::raw(format!("{:1$}", "", (task.depth * 4) as usize)),
-                Span::raw(format!("{:?} ", task.state)),
+                Span::raw(task_depth),
+                Span::raw(task_state),
                 Span::styled(task.content.as_str(), text_style),
             ])
         })

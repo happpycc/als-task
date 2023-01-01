@@ -35,4 +35,5 @@ pub struct App {
     pub window_rect: Rect,
     pub scroll: u16,
     pub conn: Connection,
+    pub scroll_right_max: i16,
 }
