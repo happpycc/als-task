@@ -88,22 +88,20 @@ impl App {
             self.index -= if self.index == 0 {0} else {1};
             return;
         }
-        else {
-            let mut delete_num = 0;
-            let first_index = self.tasks[self.index].task_id - if self.index == 0 {0} else {1};
-            let first_depth = self.tasks[self.index].depth;
-            let mut is_delete = true;
-            for index in self.index..self.tasks.len() {
-                if index != self.index && self.tasks[self.index].depth <= first_depth{is_delete = false;}
-                if is_delete {
-                    delete_num += 1;
-                    self.conn.execute("DELETE FROM tasks WHERE create_time = ?1", params![self.tasks[self.index].create_time]).unwrap();
-                    self.tasks.remove(self.index);
-                } else {
-                    self.tasks[self.index].task_id -= delete_num;
-                    self.conn.execute("UPDATE tasks SET task_id = ?1 WHERE create_time = ?2", params![self.tasks[self.index].task_id, self.tasks[self.index].create_time]).unwrap();
-                    self.index += 1;
-                }
+        let mut delete_num = 0;
+        let first_index = self.tasks[self.index].task_id - if self.index == 0 {0} else {1};
+        let first_depth = self.tasks[self.index].depth;
+        let mut is_delete = true;
+        for index in self.index..self.tasks.len() {
+            if index != self.index && self.tasks[self.index].depth <= first_depth{is_delete = false;}
+            if is_delete {
+                delete_num += 1;
+                self.conn.execute("DELETE FROM tasks WHERE create_time = ?1", params![self.tasks[self.index].create_time]).unwrap();
+                self.tasks.remove(self.index);
+            } else {
+                self.tasks[self.index].task_id -= delete_num;
+                self.conn.execute("UPDATE tasks SET task_id = ?1 WHERE create_time = ?2", params![self.tasks[self.index].task_id, self.tasks[self.index].create_time]).unwrap();
+                self.index += 1;
             }
             self.index = first_index;
             // for index in self.index + 1..self.tasks.len() {
@@ -112,20 +110,17 @@ impl App {
     }
 
     pub fn change_state(&mut self, state: TaskState) {
-        if self.tasks.len() == 0 {return;}
-        else if self.index + 1 == self.tasks.len() {
+        if self.tasks.len() == 0 {return}
+        if self.index == self.tasks.len() -1 {
             self.tasks[self.index].state = state;
             self.conn.execute("UPDATE tasks SET state = ?1 WHERE create_time = ?2", params![format!("{:?}", self.tasks[self.index].state), self.tasks[self.index].create_time]).unwrap();
+            return;
         }
-        else if self.tasks[self.index + 1].depth == self.tasks[self.index].depth {return self.tasks[self.index].state = state;}
+        let current_depth = self.tasks[self.index].depth;
         for index in self.index..self.tasks.len() {
+            if index != self.index && self.tasks[index].depth <= current_depth {return}
             self.tasks[index].state = state;
             self.conn.execute("UPDATE tasks SET state = ?1 WHERE create_time = ?2", params![format!("{:?}", self.tasks[index].state), self.tasks[index].create_time]).unwrap();
-            if self.tasks[self.index].depth == self.tasks[index + if index == self.tasks.len() - 1 {0} else {1}].depth {
-                return;
-            } else if self.tasks[index + if index == self.tasks.len() - 1 {0} else {1}].depth < self.tasks[self.index].depth {
-                return;
-            }
         }
     }
 
