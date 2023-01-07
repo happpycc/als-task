@@ -1,8 +1,10 @@
-use rusqlite::{Connection, params};
+use rusqlite::Connection;
 
 use crate::models::TaskGroup;
 
-pub fn init_database() -> rusqlite::Result<Connection, rusqlite::Error> {
+pub fn init_database()
+    -> rusqlite::Result<Connection, rusqlite::Error> 
+{
     let conn = Connection::open("tasks.db").unwrap();
     create_group(&conn, "homeless").unwrap();
 
@@ -12,13 +14,13 @@ pub fn init_database() -> rusqlite::Result<Connection, rusqlite::Error> {
 pub fn create_group(conn: &Connection, group_name: &str)
     -> rusqlite::Result<(), rusqlite::Error> 
 {
-    conn.execute("CREATE TABLE IF NOT EXISTS tasks (
+    conn.execute(&format!("CREATE TABLE IF NOT EXISTS {} (
         id INTEGER PRIMARY KEY,
         depth INTEGER,
         content TEXT,
         state TEXT,
         create_time TEXT
-    );", params![group_name])?;
+    );", group_name), [])?;
     Ok(())
 }
 
