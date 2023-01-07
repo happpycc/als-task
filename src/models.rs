@@ -1,10 +1,9 @@
 use rusqlite::Connection;
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum TaskState {
     Abandon,
     Done,
-    #[default]
     Todo,
 }
 
@@ -18,7 +17,7 @@ pub struct Task {
     pub depth: u8,
     pub content: String,
     pub state: TaskState,
-    pub create_time: Option<String>
+    pub create_time: String,
 }
 
 pub struct TaskGroup {
