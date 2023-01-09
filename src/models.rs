@@ -23,11 +23,8 @@ pub struct Task {
 pub struct TaskGroup {
     pub group_name: String,
     pub tasks: Vec<Task>,
-}
-
-pub struct SeletedIndex {
-    pub task: usize,
-    pub group: usize,
+    // Currently seleted task
+    pub index: usize,
 }
 
 pub struct ScrollY {
@@ -38,8 +35,8 @@ pub struct ScrollY {
 pub struct App {
     pub task_groups: Vec<TaskGroup>,
 
-    // Currently seleted task or group
-    pub index: SeletedIndex,
+    // Currently seleted group
+    pub index: usize,
 
     // Horizontal movement
     pub scroll_task: ScrollY,

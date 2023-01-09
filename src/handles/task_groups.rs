@@ -6,6 +6,7 @@ impl TaskGroup {
         Self {
             group_name,
             tasks: vec![],
+            index: 0,
         }
     }
 }
