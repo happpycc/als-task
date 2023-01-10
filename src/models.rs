@@ -12,6 +12,12 @@ pub enum InputMode {
     Insert,
 }
 
+#[derive(Debug, PartialEq)]
+pub enum Window {
+    Groups,
+    Tasks,
+}
+
 #[derive(Debug)]
 pub struct Task {
     pub depth: u8,
@@ -20,8 +26,9 @@ pub struct Task {
     pub create_time: String,
 }
 
+#[derive(Debug)]
 pub struct TaskGroup {
-    pub group_name: String,
+    pub name: String,
     pub tasks: Vec<Task>,
     // Currently seleted task
     pub index: usize,
@@ -47,4 +54,7 @@ pub struct App {
 
     // Input mode
     pub input_mode: InputMode,
+
+    // Currently seleted window
+    pub window: Window,
 }

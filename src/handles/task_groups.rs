@@ -2,9 +2,9 @@ use crate::models::TaskGroup;
 
 
 impl TaskGroup {
-    pub fn new(group_name: String) -> Self {
+    pub fn new(name: String) -> Self {
         Self {
-            group_name,
+            name,
             tasks: vec![],
             index: 0,
         }

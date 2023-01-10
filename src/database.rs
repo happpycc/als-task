@@ -17,11 +17,11 @@ pub fn create_group(conn: &Connection, group_name: &str)
 -> rusqlite::Result<(), rusqlite::Error> 
 {
     conn.execute(&format!("CREATE TABLE IF NOT EXISTS {} (
-        id INTEGER PRIMARY KEY,
-        depth INTEGER,
-        content TEXT,
-        state TEXT,
-        create_time TEXT
+            id INTEGER PRIMARY KEY,
+            depth INTEGER,
+            content TEXT,
+            state TEXT,
+            create_time TEXT
         );", group_name), [])?;
     Ok(())
 }
@@ -29,15 +29,16 @@ pub fn create_group(conn: &Connection, group_name: &str)
 pub fn get_all_data(conn: &Connection)
     -> rusqlite::Result<Vec<TaskGroup>, rusqlite::Error>
 {
-    let task_groups = vec![];
+    let mut task_groups = vec![];
     for table_name in conn.prepare("SELECT * FROM sqlite_master WHERE type='table';")?
         .query_map([], |row| {
             Ok(TableName(row.get(1)?))
         })?
     .into_iter() {
+        let table_name = table_name?.0;
         task_groups.push(TaskGroup {
-            group_name: table_name?.0,
-            tasks: get_tasks(&conn, table_name?.0.as_str()).unwrap(),
+            tasks: get_tasks(&conn, &table_name.as_str()).unwrap(),
+            name: table_name,
             index: 0
         });
     }
