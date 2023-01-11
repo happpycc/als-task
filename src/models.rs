@@ -7,6 +7,7 @@ pub enum TaskState {
     Todo,
 }
 
+#[derive(PartialEq)]
 pub enum InputMode {
     Normal,
     Insert,

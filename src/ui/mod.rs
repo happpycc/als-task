@@ -1,20 +1,21 @@
 use tui::{
     backend::Backend,
-    Frame, widgets::{Borders, Block, Paragraph}, text::{Spans, Span}, style::{Style, Color}, layout::Alignment,
+    Frame, widgets::{Borders, Block, Paragraph, Clear}, text::{Spans, Span}, style::{Style, Color}, layout::Alignment,
 };
+use tui_textarea::TextArea;
 
-use crate::models::{App, Window};
+use crate::models::{App, Window, InputMode};
 
 mod layout;
 mod tasks;
 mod groups;
 
-use self::layout::make_layout;
+use self::layout::{make_layout, centered_rect};
 use self::groups::make_group_texts;
 use self::tasks::make_task_texts;
 
 
-pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App, textarea: &mut TextArea) {
     let size = f.size();
 
     // Make groups texts
@@ -54,7 +55,16 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 
     f.render_widget(group_paragraphs, chunks[0]);
     f.render_widget(task_paragraphs, chunks[1]);
+
+    // If app.InputMode == Insert, then draw input ui
+    if app.input_mode == InputMode::Insert {
+        let area = centered_rect(60, 12, size);
+        textarea.set_block(Block::default().borders(Borders::all()));
+        f.render_widget(Clear, area); //this clears out the background
+        f.render_widget(textarea.widget(), area);
+    }
 }
+
 
 pub fn get_showing_range(len: usize, window_height: u16, index: usize)
     -> (usize, usize, usize)

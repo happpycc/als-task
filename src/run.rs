@@ -2,15 +2,19 @@ use std::io;
 
 use crossterm::event::{Event, self, KeyCode};
 use tui::{backend::Backend, Terminal};
+use tui_textarea::TextArea;
 
 use crate::models::{App, InputMode, Window};
 use crate::ui::ui;
 
 
 pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
+    // Init textarea
+    let mut textarea = TextArea::default();
+
     loop {
         terminal.draw(|f| {
-            ui(f, &mut app);
+            ui(f, &mut app, &mut textarea);
         })?;
 
         if let Event::Key(key) = event::read()? {
