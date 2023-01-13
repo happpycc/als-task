@@ -1,6 +1,6 @@
 use chrono::Local;
 
-use crate::models::{Task, TaskState};
+use crate::models::{Task, State};
 
 impl Task {
     pub fn new() -> Self {
@@ -8,7 +8,8 @@ impl Task {
         Self {
             depth: 0,
             content: "".to_string(),
-            state: TaskState::Todo,
+            task_state: State::Todo,
+            group_state: State::Todo,
             create_time: local_time,
         }
     }

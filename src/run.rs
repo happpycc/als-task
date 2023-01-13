@@ -26,18 +26,20 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
                             KeyCode::Char('k') => { app.index_prev() },
                             KeyCode::Char('H') => { app.window_change() },
                             KeyCode::Char('L') => { app.window_change() },
-                            KeyCode::Char('o') => {},
-                            KeyCode::Char('O') => {},
+                            KeyCode::Char('o') => { app.add_brother_next() },
+                            KeyCode::Char('O') => { app.add_brother_prev() },
                             KeyCode::Char('i') => {},
                             KeyCode::Char('a') => {},
                             KeyCode::Char('s') => {},
                             KeyCode::Char('d') => {},
-                            KeyCode::Enter => {},
+                            KeyCode::Enter => { app.add_brother_next() },
                             KeyCode::Char('q') => return Ok(()),
                             _ => {}
                         },
-                        InputMode::Insert => match key.code {
-                            _ => {},
+                        InputMode::Insert(_) => match key.code {
+                            KeyCode::Enter => { app.add_finished() },
+                            KeyCode::Esc => { app.add_abandoned() },
+                            _ => { textarea.input(key); },
                         }
                     }
                 },
@@ -60,7 +62,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
                             KeyCode::Char('q') => return Ok(()),
                             _ => {}
                         },
-                        InputMode::Insert => match key.code {
+                        InputMode::Insert(_) => match key.code {
                             _ => {},
                         }
                     }

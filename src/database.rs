@@ -1,6 +1,6 @@
 use rusqlite::{Connection, params};
 
-use crate::models::{TaskGroup, Task, TaskState};
+use crate::models::{TaskGroup, Task, State};
 
 struct TableName(String);
 
@@ -20,7 +20,8 @@ pub fn create_group(conn: &Connection, group_name: &str)
             id INTEGER PRIMARY KEY,
             depth INTEGER,
             content TEXT,
-            state TEXT,
+            task_state TEXT,
+            group_state TEXT,
             create_time TEXT
         );", group_name), [])?;
     Ok(())
@@ -50,20 +51,21 @@ pub fn get_tasks(conn: &Connection, group_name: &str)
     -> rusqlite::Result<Vec<Task>, rusqlite::Error>
 {
     let mut stmt = conn.prepare(&format!("SELECT * FROM {} ORDER BY id", group_name))?;
-    let into_task_state = |f: String| {
+    let into_state = |f: String| {
         match &f as &str {
-            "Todo" => TaskState::Todo,
-            "Done" => TaskState::Done,
-            "Abandon" => TaskState::Abandon,
-            _ => TaskState::Todo,
+            "Todo" => State::Todo,
+            "Done" => State::Done,
+            "Abandon" => State::Abandon,
+            _ => State::Todo,
         }
     };
     let tasks_iter = stmt.query_map([], |row| {
         Ok(Task {
-            depth: row.get(2)?,
-            content: row.get(3)?,
-            state: into_task_state(row.get(4)?),
-            create_time: row.get(6)?,
+            depth: row.get(1)?,
+            content: row.get(2)?,
+            task_state: into_state(row.get(3)?),
+            group_state: into_state(row.get(4)?),
+            create_time: row.get(5)?,
         })
     })?
     .into_iter();
@@ -84,12 +86,13 @@ pub fn insert_task(conn: &Connection, group_name: &str, task: &Task, index: usiz
             content,
             state,
             create_time,
-        ) VALUES (?1, ?2, ?3, ?4, ?5);", group_name),
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6);", group_name),
     params![
         index,
         task.depth,
         task.content,
-        format!("{:?}", task.state),
+        format!("{:?}", task.task_state),
+        format!("{:?}", task.group_state),
         task.create_time
     ])?;
     Ok(())

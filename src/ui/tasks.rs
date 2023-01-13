@@ -22,7 +22,7 @@ pub fn make_task_texts(app: &App, size: Rect) -> (Vec<Spans>, usize) {
             if task.content.width() > max_tasks_len {max_tasks_len = task.content.width()}
 
             let task_depth = format!("{:1$}", "", (task.depth * 4) as usize);
-            let task_state = format!("{:?} ", task.state);
+            let task_state = format!("{:?} ", task.task_state);
             let mut text_style = Style::default().fg(Color::White).bg(Color::Reset);
             if highlight_index == index {
                 text_style = Style::default().fg(Color::Black).bg(Color::White);

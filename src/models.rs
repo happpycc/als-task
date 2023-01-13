@@ -1,7 +1,7 @@
 use rusqlite::Connection;
 
 #[derive(Debug, Clone, Copy)]
-pub enum TaskState {
+pub enum State {
     Abandon,
     Done,
     Todo,
@@ -10,7 +10,13 @@ pub enum TaskState {
 #[derive(PartialEq)]
 pub enum InputMode {
     Normal,
-    Insert,
+    Insert(InsertPosistion),
+}
+
+#[derive(PartialEq)]
+pub enum InsertPosistion {
+    Previous,
+    Next
 }
 
 #[derive(Debug, PartialEq)]
@@ -23,7 +29,8 @@ pub enum Window {
 pub struct Task {
     pub depth: u8,
     pub content: String,
-    pub state: TaskState,
+    pub task_state: State,
+    pub group_state: State,
     pub create_time: String,
 }
 
