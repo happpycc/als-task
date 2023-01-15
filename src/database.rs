@@ -2,21 +2,35 @@ use rusqlite::{Connection, params};
 
 use crate::models::{TaskGroup, Task, State};
 
-struct TableName(String);
+struct Groups((String, String));
 
 pub fn init_database()
 -> rusqlite::Result<Connection, rusqlite::Error> 
 {
     let conn = Connection::open("tasks.db").unwrap();
+    init_table_groups(&conn);
     create_group(&conn, "homeless").unwrap();
 
     Ok(conn)
 }
 
+
+pub fn init_table_groups(conn: &Connection) {
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS groups (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            group_id INTEGER,
+            name TEXT,
+            create_time TEXT
+        );", [])
+    .unwrap();
+}
+
 pub fn create_group(conn: &Connection, group_name: &str)
 -> rusqlite::Result<(), rusqlite::Error> 
 {
-    conn.execute(&format!("CREATE TABLE IF NOT EXISTS {} (
+    conn.execute(&format!(
+        "CREATE TABLE IF NOT EXISTS {} (
             id INTEGER PRIMARY KEY,
             depth INTEGER,
             content TEXT,
@@ -31,16 +45,17 @@ pub fn get_all_data(conn: &Connection)
     -> rusqlite::Result<Vec<TaskGroup>, rusqlite::Error>
 {
     let mut task_groups = vec![];
-    for table_name in conn.prepare("SELECT * FROM sqlite_master WHERE type='table';")?
+    for group in conn.prepare("SELECT * FROM groups ORDER BY group_id;")?
         .query_map([], |row| {
-            Ok(TableName(row.get(1)?))
+            Ok(Groups((row.get(2)?, row.get(3)?)))
         })?
     .into_iter() {
-        let table_name = table_name?.0;
+        let (name, create_time) = group?.0;
         task_groups.push(TaskGroup {
-            tasks: get_tasks(&conn, &table_name.as_str()).unwrap(),
-            name: table_name,
-            index: 0
+            tasks: get_tasks(&conn, &name.as_str()).unwrap(),
+            name,
+            index: 0,
+            create_time,
         });
     }
 
@@ -85,7 +100,7 @@ pub fn insert_task(conn: &Connection, group_name: &str, task: &Task, index: usiz
             depth,
             content,
             state,
-            create_time,
+            create_time
         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6);", group_name),
     params![
         index,

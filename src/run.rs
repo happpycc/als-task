@@ -37,8 +37,14 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
                             _ => {}
                         },
                         InputMode::Insert(_) => match key.code {
-                            KeyCode::Enter => { app.add_finished() },
-                            KeyCode::Esc => { app.add_abandoned() },
+                            KeyCode::Enter => {
+                                app.add_finished(&textarea.lines());
+                                textarea.delete_line_by_head();
+                            },
+                            KeyCode::Esc => {
+                                app.add_abandoned();
+                                textarea.delete_line_by_head();
+                            },
                             _ => { textarea.input(key); },
                         }
                     }
@@ -48,8 +54,8 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
                         InputMode::Normal => match key.code {
                             KeyCode::Char('j') => { app.index_next()},
                             KeyCode::Char('k') => { app.index_prev()},
-                            KeyCode::Char('H') => { app.window_change() },
-                            KeyCode::Char('L') => { app.window_change() },
+                            KeyCode::Char('H') => { app.window_change(); },
+                            KeyCode::Char('L') => { app.window_change(); },
                             KeyCode::Char('o') => {},
                             KeyCode::Char('O') => {},
                             KeyCode::Char('i') => {},

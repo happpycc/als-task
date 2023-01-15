@@ -6,6 +6,7 @@ use super::get_showing_range;
 
 
 pub fn make_task_texts(app: &App, size: Rect) -> (Vec<Spans>, usize) {
+    if app.task_groups.len() == 0 { return (vec![], 0) }
     let tasks = &app.task_groups[app.index].tasks;
 
     let (begin, end, highlight_index) = get_showing_range(

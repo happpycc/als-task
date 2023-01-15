@@ -38,8 +38,11 @@ pub struct Task {
 pub struct TaskGroup {
     pub name: String,
     pub tasks: Vec<Task>,
+
     // Currently seleted task
     pub index: usize,
+
+    pub create_time: String
 }
 
 pub struct ScrollY {
