@@ -31,7 +31,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
                             KeyCode::Char('i') => {},
                             KeyCode::Char('a') => {},
                             KeyCode::Char('s') => {},
-                            KeyCode::Char('d') => {},
+                            KeyCode::Char('d') => { app.delete_current() },
                             KeyCode::Enter => { app.add_brother_next() },
                             KeyCode::Char('q') => return Ok(()),
                             _ => {}

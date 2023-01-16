@@ -64,4 +64,38 @@ impl App {
         }
         self.input_mode = InputMode::Normal;
     }
+
+    // Delete task_group
+    pub fn delete_current(&mut self) {
+        // If not group in groups
+        if self.task_groups.len() == 0 { return; }
+
+        // Update group_id
+        for index in self.index + 1..self.task_groups.len() {
+            self.conn.execute(
+                "UPDATE groups SET group_id = ?1 WHERE create_time = ?2;",
+                params![
+                    index - 1,
+                    self.task_groups[index].create_time
+                ])
+            .unwrap();
+        }
+
+        // Delete current text in table
+        self.conn.execute(
+            "DELETE FROM groups WHERE create_time = ?1;",
+            params![self.task_groups[self.index].create_time])
+        .unwrap();
+
+        // Delete current table in database
+        self.conn.execute(&format!(
+            "DROP TABLE {};",
+            self.task_groups[self.index].name),
+            [])
+        .unwrap();
+
+        // Delete current group in program
+        self.task_groups.remove(self.index);
+        self.index -= if self.index == 0 {0} else {1}
+    }
 }
