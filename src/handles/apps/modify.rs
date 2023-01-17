@@ -20,7 +20,15 @@ impl App {
 
     pub fn add_finished(&mut self, name: &[String]) {
         let name = &name[0];
+
+        // If name == "" return
         if name == "" { return self.add_abandoned() }
+
+        // If has name return
+        for group in &self.task_groups {
+            if &group.name == name { return self.add_abandoned() }
+        }
+
         self.input_mode = InputMode::Normal;
         self.task_groups[self.index].name = name.to_string();
 
