@@ -1,10 +1,18 @@
 use rusqlite::params;
 
 use crate::models::{App, InputMode, TaskGroup, InsertPosistion};
-use crate::database::create_group;
+use crate::database::{create_group_table, insert_group};
 
 
 impl App {
+    // If there is repeated
+    fn repeat_or_not(&mut self, name: &String) -> bool {
+        for group in &self.task_groups {
+            if &group.name == name { return false }
+        }
+        true
+    }
+    
     // Add group next
     pub fn add_brother_next(&mut self) {
         self.input_mode = InputMode::Insert(InsertPosistion::Next);
@@ -22,53 +30,39 @@ impl App {
         let name = &name[0];
 
         // If name == "" return
-        if name == "" { return self.add_abandoned() }
-
         // If has name return
-        for group in &self.task_groups {
-            if &group.name == name { return self.add_abandoned() }
+        if name == "" || !self.repeat_or_not(name) {
+            return self.add_abandoned()
         }
 
-        self.input_mode = InputMode::Normal;
         self.task_groups[self.index].name = name.to_string();
 
-        // Change after current task_group's task_groups' id
-        for index in self.index + 1..self.task_groups.len() {
-            self.conn.execute(
-                "UPDATE groups SET group_id = ?1 WHERE create_time = ?2",
-                params![index, self.task_groups[index].create_time])
-            .unwrap();
+        match &self.input_mode {
+            InputMode::Normal => {},
+            InputMode::Insert(position) => {
+                match position {
+                    InsertPosistion::Current => {},
+                    _ => { insert_group(&self).unwrap() }
+                }
+            }
         }
+            
 
-        // Add task_groups into groups table
-        let task_group = &self.task_groups[self.index];
-        self.conn.execute("
-            INSERT INTO groups (
-                group_id,
-                name,
-                create_time
-            ) VALUES (?1, ?2, ?3);",
-        params![
-            self.index,
-            task_group.name,
-            task_group.create_time,
-        ]).unwrap();
-
-        // Create table => task_groups
-        create_group(&self.conn, &task_group.name).unwrap();
+        self.input_mode = InputMode::Normal;
     }
 
     // When insert want to abandoned
     pub fn add_abandoned(&mut self) {
-        self.task_groups.remove(self.index);
         match &self.input_mode {
+            InputMode::Normal => {}
             InputMode::Insert(position) => match &position {
                 InsertPosistion::Next => {
+                    self.task_groups.remove(self.index);
                     self.index -= if self.task_groups.len() == 0 {0} else {1}
                 }
-                InsertPosistion::Previous => {}
+                InsertPosistion::Previous => {},
+                InsertPosistion::Current => {}
             }
-            InputMode::Normal => {}
         }
         self.input_mode = InputMode::Normal;
     }

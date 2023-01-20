@@ -4,7 +4,7 @@ use tui::{
 };
 use tui_textarea::TextArea;
 
-use crate::models::{App, Window, InputMode};
+use crate::models::{App, Window, InputMode, InsertPosistion};
 
 mod layout;
 mod tasks;
@@ -57,28 +57,42 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App, textarea: &mut TextArea) 
     f.render_widget(task_paragraphs, chunks[1]);
 
     // If app.InputMode == Insert, then draw input ui
-    match app.input_mode {
+    let mut make_input_border = |s: String| {
+        let input_border = Block::default()
+            .title_alignment(Alignment::Center)
+            .title(s)
+        .borders(Borders::ALL);
+        let area = centered_rect(40, 12, size);
+        textarea.set_block(input_border);
+        f.render_widget(Clear, area); //this clears out the background
+        f.render_widget(textarea.widget(), area);
+    };
+    match &app.input_mode {
         InputMode::Normal => {},
-        InputMode::Insert(_) => {
-            let input_border = Block::default()
-                .title_alignment(Alignment::Center)
-                .title(
+        InputMode::Insert(position) => match position {
+            InsertPosistion::Current => {
+                make_input_border(
+                    format!("Rename {}", match app.window {
+                        Window::Tasks => "task",
+                        Window::Groups => "group"
+                    })
+                )
+            },
+            _ => {
+                make_input_border(
                     format!("Add new {}", match app.window {
                         Window::Tasks => "task",
                         Window::Groups => "group"
                     })
                 )
-            .borders(Borders::ALL);
-            let area = centered_rect(40, 12, size);
-            textarea.set_block(input_border);
-            f.render_widget(Clear, area); //this clears out the background
-            f.render_widget(textarea.widget(), area);
+            }
+
         }
     }
 }
 
 
-pub fn get_showing_range(len: usize, window_height: u16, index: usize)
+fn get_showing_range(len: usize, window_height: u16, index: usize)
     -> (usize, usize, usize)
 {
     let begin: usize;

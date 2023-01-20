@@ -16,6 +16,7 @@ pub enum InputMode {
 #[derive(PartialEq)]
 pub enum InsertPosistion {
     Previous,
+    Current,
     Next
 }
 
