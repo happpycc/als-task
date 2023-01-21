@@ -1,7 +1,7 @@
 use rusqlite::params;
 
 use crate::models::{App, InputMode, TaskGroup, InsertPosistion};
-use crate::database::{create_group_table, insert_group};
+use crate::database::insert_group;
 
 
 impl App {

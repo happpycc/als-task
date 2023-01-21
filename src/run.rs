@@ -32,10 +32,12 @@ pub fn run_app<B: Backend>(
                             KeyCode::Char('o') => { app.add_brother_next() },
                             KeyCode::Char('O') => { app.add_brother_prev() },
                             KeyCode::Char('i') => {
+                                textarea.insert_str(&app.task_groups[app.index].name);
                                 textarea.move_cursor(CursorMove::Head);
                                 app.input_mode = InputMode::Insert(InsertPosistion::Current);
                             },
                             KeyCode::Char('a') => {
+                                textarea.insert_str(&app.task_groups[app.index].name);
                                 textarea.move_cursor(CursorMove::End);
                                 app.input_mode = InputMode::Insert(InsertPosistion::Current);
                             },
@@ -51,10 +53,12 @@ pub fn run_app<B: Backend>(
                         InputMode::Insert(_) => match key.code {
                             KeyCode::Enter => {
                                 app.add_finished(&textarea.lines());
+                                textarea.move_cursor(CursorMove::End);
                                 textarea.delete_line_by_head();
                             },
                             KeyCode::Esc => {
                                 app.add_abandoned();
+                                textarea.move_cursor(CursorMove::End);
                                 textarea.delete_line_by_head();
                             },
                             _ => { textarea.input(key); },
