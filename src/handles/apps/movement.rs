@@ -1,4 +1,4 @@
-use crate::models::{App, InputMode, ScrollY, Task, Window};
+use crate::models::{App, Window};
 
 
 impl App {

@@ -10,13 +10,6 @@ impl App {
     pub fn new() -> App {
         let conn = init_database().unwrap();
         let task_groups = get_all_data(&conn).unwrap();
-        //task_groups[0].tasks = vec![
-        //    Task {content: "fsadfsad".to_string(), ..Default::default()},
-        //    Task {content: "fsadfsad".to_string(), ..Default::default()},
-        //    Task {content: "fsadfsad".to_string(), ..Default::default()},
-        //    Task {content: "fsadfsad".to_string(), ..Default::default()},
-        //    Task {content: "fsadfsad".to_string(), ..Default::default()},
-        //];
         App {
             conn,
             task_groups,

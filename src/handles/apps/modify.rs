@@ -1,7 +1,8 @@
+use chrono::Local;
 use rusqlite::params;
 
 use crate::models::{App, InputMode, TaskGroup, InsertPosistion};
-use crate::database::insert_group;
+use crate::database::groups::insert_group;
 
 
 impl App {
@@ -36,6 +37,7 @@ impl App {
         }
 
         self.task_groups[self.index].name = name.to_string();
+        self.task_groups[self.index].create_time = Local::now().to_string();
 
         match &self.input_mode {
             InputMode::Normal => {},
@@ -46,7 +48,6 @@ impl App {
                 }
             }
         }
-            
 
         self.input_mode = InputMode::Normal;
     }
@@ -60,7 +61,9 @@ impl App {
                     self.task_groups.remove(self.index);
                     self.index -= if self.task_groups.len() == 0 {0} else {1}
                 }
-                InsertPosistion::Previous => {},
+                InsertPosistion::Previous => {
+                    self.task_groups.remove(self.index);
+                },
                 InsertPosistion::Current => {}
             }
         }
@@ -70,7 +73,10 @@ impl App {
     // Delete task_group
     pub fn delete_current(&mut self) {
         // If not group in groups
-        if self.task_groups.len() == 0 { return; }
+        if self.task_groups.len() == 0 ||
+            self.task_groups[self.index].name == "homeless" {
+            return; 
+        }
 
         // Update group_id
         for index in self.index + 1..self.task_groups.len() {

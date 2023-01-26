@@ -66,14 +66,15 @@ pub fn run_app<B: Backend>(
                     }
                 },
                 Window::Tasks => {
+                    let task_group = &mut app.task_groups[app.index];
                     match app.input_mode {
                         InputMode::Normal => match key.code {
-                            KeyCode::Char('j') => { app.index_next()},
-                            KeyCode::Char('k') => { app.index_prev()},
+                            KeyCode::Char('j') => { task_group.index_next()},
+                            KeyCode::Char('k') => { task_group.index_prev()},
                             KeyCode::Char('H') => { app.window_change(); },
                             KeyCode::Char('L') => { app.window_change(); },
-                            KeyCode::Char('o') => {},
-                            KeyCode::Char('O') => {},
+                            KeyCode::Char('o') => { task_group.add_brother_next() },
+                            KeyCode::Char('O') => { task_group.add_brother_prev() },
                             KeyCode::Char('i') => {},
                             KeyCode::Char('a') => {},
                             KeyCode::Char('s') => {},
