@@ -2,7 +2,7 @@ use chrono::Local;
 use rusqlite::params;
 
 use crate::models::{App, InputMode, TaskGroup, InsertPosistion};
-use crate::database::groups::insert_group;
+use crate::database::groups::{insert_group, update_groups_name};
 
 
 impl App {
@@ -36,15 +36,26 @@ impl App {
             return self.add_abandoned()
         }
 
+        let old_name = self.task_groups[self.index].name.clone();
         self.task_groups[self.index].name = name.to_string();
-        self.task_groups[self.index].create_time = Local::now().to_string();
+
 
         match &self.input_mode {
             InputMode::Normal => {},
             InputMode::Insert(position) => {
                 match position {
-                    InsertPosistion::Current => {},
-                    _ => { insert_group(&self).unwrap() }
+                    InsertPosistion::Current => {
+                        self.conn.execute(&format!(
+                            "ALTER TABLE '{}' RENAME TO '{}'",
+                            old_name,
+                            name
+                        ),
+                        []).unwrap();
+                        update_groups_name(&self.conn, &self.task_groups[self.index]).unwrap();
+                    },
+                    _ => {
+                        insert_group(&self).unwrap()
+                    }
                 }
             }
         }
@@ -97,7 +108,7 @@ impl App {
 
         // Delete current table in database
         self.conn.execute(&format!(
-            "DROP TABLE {};",
+            "DROP TABLE '{}';",
             self.task_groups[self.index].name),
             [])
         .unwrap();
