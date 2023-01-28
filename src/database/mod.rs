@@ -2,7 +2,7 @@ use rusqlite::Connection;
 
 use crate::models::TaskGroup;
 
-use self::{groups::init_table_groups, tasks::get_tasks};
+use self::{groups::init_groups, tasks::get_tasks};
 
 pub mod groups;
 pub mod tasks;
@@ -13,7 +13,7 @@ pub fn init_database()
 -> rusqlite::Result<Connection, rusqlite::Error> 
 {
     let conn = Connection::open("tasks.db").unwrap();
-    init_table_groups(&conn);
+    init_groups(&conn).unwrap();
 
     Ok(conn)
 }

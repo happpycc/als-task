@@ -5,7 +5,12 @@ use crate::models::{Task, State};
 pub fn get_tasks(conn: &Connection, group_name: &str)
     -> rusqlite::Result<Vec<Task>, rusqlite::Error>
 {
-    let mut stmt = conn.prepare(&format!("SELECT * FROM {} ORDER BY id", group_name))?;
+    let mut stmt = conn.prepare(
+        &format!(
+            "SELECT * FROM '{}' ORDER BY id",
+            group_name
+        )
+    )?;
     let into_state = |f: String| {
         match &f as &str {
             "Todo" => State::Todo,

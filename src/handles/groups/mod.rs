@@ -16,3 +16,9 @@ impl TaskGroup {
         }
     }
 }
+
+impl Default for TaskGroup {
+    fn default() -> Self {
+        TaskGroup::new("".to_owned())
+    }
+}

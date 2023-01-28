@@ -1,8 +1,7 @@
-use chrono::Local;
 use rusqlite::params;
 
 use crate::models::{App, InputMode, TaskGroup, InsertPosistion};
-use crate::database::groups::{insert_group, update_groups_name};
+use crate::database::groups::{insert_group, update_group, delete_group};
 
 
 impl App {
@@ -30,9 +29,14 @@ impl App {
     pub fn add_finished(&mut self, name: &[String]) {
         let name = &name[0];
 
-        // If name == "" return
+        // If name == "" return 
+        // If name == "groups" return 
         // If has name return
-        if name == "" || !self.repeat_or_not(name) {
+        if name == ""
+            || name == "groups"
+            || name == "homeless"
+            || !self.repeat_or_not(name)
+        {
             return self.add_abandoned()
         }
 
@@ -43,18 +47,23 @@ impl App {
         match &self.input_mode {
             InputMode::Normal => {},
             InputMode::Insert(position) => {
+                let task_group = &self.task_groups[self.index];
                 match position {
                     InsertPosistion::Current => {
-                        self.conn.execute(&format!(
-                            "ALTER TABLE '{}' RENAME TO '{}'",
-                            old_name,
-                            name
-                        ),
-                        []).unwrap();
-                        update_groups_name(&self.conn, &self.task_groups[self.index]).unwrap();
+                        update_group(
+                            &self.conn,
+                            task_group,
+                            &old_name
+                        ).unwrap();
                     },
                     _ => {
-                        insert_group(&self).unwrap()
+                        insert_group(
+                            &self.conn,
+                            task_group,
+                            &self.task_groups,
+                            self.index,
+                            self.task_groups.len()
+                        ).unwrap()
                     }
                 }
             }
@@ -81,39 +90,23 @@ impl App {
         self.input_mode = InputMode::Normal;
     }
 
-    // Delete task_group
+    // Delete task_group 
     pub fn delete_current(&mut self) {
         // If not group in groups
-        if self.task_groups.len() == 0 ||
-            self.task_groups[self.index].name == "homeless" {
+        if self.task_groups[self.index].name == "homeless" {
             return; 
         }
 
-        // Update group_id
-        for index in self.index + 1..self.task_groups.len() {
-            self.conn.execute(
-                "UPDATE groups SET group_id = ?1 WHERE create_time = ?2;",
-                params![
-                    index - 1,
-                    self.task_groups[index].create_time
-                ])
-            .unwrap();
-        }
+        // Delete current group in database 
+        delete_group(
+            &self.conn,
+            &self.task_groups[self.index],
+            &self.task_groups,
+            self.index,
+            self.task_groups.len()
+        ).unwrap();
 
-        // Delete current text in table
-        self.conn.execute(
-            "DELETE FROM groups WHERE create_time = ?1;",
-            params![self.task_groups[self.index].create_time])
-        .unwrap();
-
-        // Delete current table in database
-        self.conn.execute(&format!(
-            "DROP TABLE '{}';",
-            self.task_groups[self.index].name),
-            [])
-        .unwrap();
-
-        // Delete current group in program
+        // Delete current group in program 
         self.task_groups.remove(self.index);
         self.index -= if self.index == 0 {0} else {1}
     }
