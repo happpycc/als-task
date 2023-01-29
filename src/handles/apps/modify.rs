@@ -1,5 +1,3 @@
-use rusqlite::params;
-
 use crate::models::{App, InputMode, TaskGroup, InsertPosistion};
 use crate::database::groups::{insert_group, update_group, delete_group};
 
