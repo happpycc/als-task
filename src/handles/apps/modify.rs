@@ -13,14 +13,12 @@ impl App {
     
     // Add group next
     pub fn add_brother_next(&mut self) {
-        self.input_mode = InputMode::Insert(InsertPosistion::Next);
         if self.task_groups.len() != 0 { self.index += 1 };
         self.task_groups.insert(self.index, TaskGroup::new("".to_string()));
     }
 
     // Add group prev
     pub fn add_brother_prev(&mut self) {
-        self.input_mode = InputMode::Insert(InsertPosistion::Previous);
         self.task_groups.insert(self.index, TaskGroup::new("".to_string()));
     }
 
@@ -59,8 +57,7 @@ impl App {
                             &self.conn,
                             task_group,
                             &self.task_groups,
-                            self.index,
-                            self.task_groups.len()
+                            self.index
                         ).unwrap()
                     }
                 }

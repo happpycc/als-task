@@ -23,7 +23,6 @@ pub fn init_groups(conn: &Connection)
         &TaskGroup { name: "homeless".to_owned(), ..Default::default() },
         &vec![],
         0,
-        0,
     ).unwrap();
 
     Ok(())
@@ -33,8 +32,7 @@ pub fn insert_group(
     conn: &Connection,
     group: &TaskGroup,
     groups: &Vec<TaskGroup>,
-    group_index: usize,
-    groups_len: usize,
+    group_index: usize
 )
     -> rusqlite::Result<(), rusqlite::Error> 
 {
@@ -52,7 +50,7 @@ pub fn insert_group(
     ])?;
 
     // Change groups id in groups(table)
-    for index in group_index + 1..groups_len {
+    for index in group_index + 1..groups.len() {
         conn.execute(
             "UPDATE groups SET group_id = ?1 WHERE create_time = ?2",
             params![index, groups[index].create_time])

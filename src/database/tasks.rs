@@ -36,7 +36,14 @@ pub fn get_tasks(conn: &Connection, group_name: &str)
     Ok(tasks)
 }
 
-pub fn insert_task(conn: &Connection, group_name: &str, task: &Task, index: usize)
+pub fn insert_task(
+    conn: &Connection,
+    group_name: &str,
+    task: &Task,
+    tasks: &Vec<Task>,
+    task_index: usize,
+)
+    // Add new task 
     -> rusqlite::Result<(), rusqlite::Error> 
 {
     conn.execute(&format!("
@@ -44,16 +51,34 @@ pub fn insert_task(conn: &Connection, group_name: &str, task: &Task, index: usiz
             id,
             depth,
             content,
-            state,
+            task_state,
+            group_state,
             create_time
         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6);", group_name),
     params![
-        index,
+        task_index,
         task.depth,
         task.content,
         format!("{:?}", task.task_state),
         format!("{:?}", task.group_state),
         task.create_time
     ])?;
+
+    // Change other tasks id 
+    for index in task_index + 1..tasks.len() {
+        conn.execute(
+            "UPDATE groups SET id = ?1 WHERE create_time = ?2",
+            params![index, tasks[index].create_time])
+        .unwrap();
+    }
+
     Ok(())
+}
+
+pub fn update_task() {
+
+}
+
+pub fn delete_task() {
+    
 }
