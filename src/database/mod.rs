@@ -7,7 +7,7 @@ use self::{groups::init_groups, tasks::get_tasks};
 pub mod groups;
 pub mod tasks;
 
-struct Groups((String, String));
+struct Groups((String, i64));
 
 pub fn init_database()
 -> rusqlite::Result<Connection, rusqlite::Error> 

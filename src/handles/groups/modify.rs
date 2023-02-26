@@ -1,6 +1,10 @@
 use rusqlite::Connection;
 
-use crate::{models::{TaskGroup, Task, InputMode, InsertPosistion}, database::tasks::insert_task};
+use crate::{models::{TaskGroup, Task, InputMode, InsertPosistion}, database::tasks::{
+    insert_task,
+    delete_task,
+    update_task
+}};
 
 impl TaskGroup {
     pub fn add_brother_next(&mut self, depth: u8) {
@@ -27,9 +31,7 @@ impl TaskGroup {
             return self.add_abandoned()
         }
 
-        let old_content = self.tasks[self.index].content.clone();
         self.tasks[self.index].content = content.to_string();
-
 
         match input_mode {
             InputMode::Normal => {},
@@ -55,7 +57,21 @@ impl TaskGroup {
         
     }
 
-    pub fn delete_current(&mut self) {
+    pub fn delete_current(&mut self, conn: &Connection) {
+        if self.tasks.len() == 0 { return }
+
+        delete_task(
+            conn,
+            self.tasks.len(),
+            &self.name,
+            self.index,
+            self.tasks[self.index].create_time
+        ).unwrap();
         
+        self.tasks.remove(self.index);
+
+        if self.index == self.tasks.len() && self.index != 0 {
+            self.index -= 1
+        }
     }
 }

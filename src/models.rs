@@ -32,7 +32,7 @@ pub struct Task {
     pub content: String,
     pub task_state: State,
     pub group_state: State,
-    pub create_time: String,
+    pub create_time: i64,
 }
 
 #[derive(Debug)]
@@ -43,7 +43,7 @@ pub struct TaskGroup {
     // Currently seleted task
     pub index: usize,
 
-    pub create_time: String
+    pub create_time: i64,
 }
 
 pub struct ScrollY {

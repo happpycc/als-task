@@ -1,10 +1,10 @@
-use chrono::Local;
+use chrono::Utc;
 
 use crate::models::{Task, State};
 
 impl Task {
     pub fn new() -> Self {
-        let local_time = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let local_time = Utc::now().timestamp();
         Self {
             depth: 0,
             content: "".to_string(),

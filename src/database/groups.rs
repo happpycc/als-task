@@ -13,7 +13,7 @@ pub fn init_groups(conn: &Connection)
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             group_id INTEGER,
             name TEXT UNIQUE,
-            create_time TEXT
+            create_time INTEGER
         );", [])
     .unwrap();
 
@@ -65,7 +65,7 @@ pub fn insert_group(
             content TEXT,
             task_state TEXT,
             group_state TEXT,
-            create_time TEXT
+            create_time INTEGER
         );", group.name), [])?;
 
     Ok(())

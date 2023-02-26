@@ -1,4 +1,4 @@
-use chrono::Local;
+use chrono::Utc;
 use crate::models::TaskGroup;
 
 pub mod modify;
@@ -7,7 +7,7 @@ pub mod movement;
 
 impl TaskGroup {
     pub fn new(name: String) -> Self {
-        let local_time = Local::now().to_string();
+        let local_time = Utc::now().timestamp();
         Self {
             name,
             tasks: vec![],

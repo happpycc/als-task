@@ -79,6 +79,32 @@ pub fn update_task() {
 
 }
 
-pub fn delete_task() {
-    
+pub fn delete_task(
+    conn: &Connection,
+    tasks_len: usize,
+    group_name: &str,
+    task_index: usize,
+    task_create_time: i64,
+)
+    -> rusqlite::Result<(), rusqlite::Error> 
+{
+    conn.execute(&format!(
+            "DELETE FROM {} WHERE create_time = ?1;", group_name 
+        ),
+        params![task_create_time]
+    )?;
+
+    // Update group_id 
+    for index in task_index + 1..tasks_len {
+        conn.execute(&format!(
+            "UPDATE {} SET id = ?1 WHERE create_time = ?2;",
+                group_name
+            ),
+            params![
+                index - 1,
+                task_create_time,
+            ])?;
+    }
+
+    Ok(())
 }
