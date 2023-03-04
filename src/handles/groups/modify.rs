@@ -38,7 +38,13 @@ impl TaskGroup {
             InputMode::Insert(position) => {
                 let task = &self.tasks[self.index];
                 match position {
-                    InsertPosistion::Current => {},
+                    InsertPosistion::Current => {
+                        update_task(
+                            conn,
+                            &self.name,
+                            &task
+                        ).unwrap();
+                    },
                     _ => {
                         insert_task(
                             conn,

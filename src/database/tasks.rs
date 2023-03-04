@@ -75,8 +75,22 @@ pub fn insert_task(
     Ok(())
 }
 
-pub fn update_task() {
+pub fn update_task(
+    conn: &Connection,
+    group_name: &str,
+    task: &Task,
+)
+    -> rusqlite::Result<(), rusqlite::Error>
+{
+    conn.execute(&format!(
+        "UPDATE {} SET content = '{}' WHERE create_time = '{}';",
+        group_name,
+        task.content,
+        task.create_time,
+    ), [])
+    .unwrap();
 
+    Ok(())
 }
 
 pub fn delete_task(
