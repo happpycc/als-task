@@ -43,9 +43,13 @@ pub struct TaskGroup {
     // Currently seleted task
     pub index: usize,
 
+    // Horizontal movement
+    pub scroll: ScrollY,
+
     pub create_time: i64,
 }
 
+#[derive(Debug)]
 pub struct ScrollY {
     pub current: u16,
     pub max: i16,
@@ -58,8 +62,7 @@ pub struct App {
     pub index: usize,
 
     // Horizontal movement
-    pub scroll_task: ScrollY,
-    pub scroll_group: ScrollY,
+    pub scroll: ScrollY,
 
     // Database connection
     pub conn: Connection,

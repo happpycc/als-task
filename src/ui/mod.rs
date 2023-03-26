@@ -18,14 +18,16 @@ use self::tasks::make_task_texts;
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App, textarea: &mut TextArea) {
     let size = f.size();
 
-    // Make groups texts
-    let (group_texts, max_groups_len) = make_group_texts(&app, size);
-
-    // Make tasks texts
-    let (task_texts, max_tasks_len) = make_task_texts(&app, size);
-
     // Make Layout
     let chunks = make_layout(size);
+
+    app.task_groups[0].tasks[0].content = format!("{:?}", size);
+    app.task_groups[0].tasks[1].content = format!("{:?}", chunks[0]);
+    app.task_groups[0].tasks[2].content = format!("{:?}", chunks[1]);
+
+    // task_groups
+    // Make groups texts
+    let (group_texts, groups_y_max): (Vec<Spans>, i16) = make_group_texts(&app, chunks[0]);
 
     // Draw task_groups ui
     let groups_block = Block::default()
@@ -37,6 +39,18 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App, textarea: &mut TextArea) 
         )))
         .borders(Borders::ALL);
 
+    let group_paragraphs = Paragraph::new(group_texts)
+        .scroll((0, app.scroll.current))
+        .block(groups_block);
+
+    f.render_widget(group_paragraphs, chunks[0]);
+
+    app.scroll.max = groups_y_max;
+
+    // tasks
+    // Make tasks texts
+    let (task_texts, tasks_y_max): (Vec<Spans>, i16) = make_task_texts(&app, chunks[1]);
+
     // Draw tasks ui
     let tasks_block = Block::default()
         .title_alignment(Alignment::Center)
@@ -47,14 +61,16 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App, textarea: &mut TextArea) 
         )))
         .borders(Borders::ALL);
 
-    let group_paragraphs = Paragraph::new(group_texts)
-        .block(groups_block);
-
     let task_paragraphs = Paragraph::new(task_texts)
+        .scroll((0, app.task_groups[app.index].scroll.current))
         .block(tasks_block);
 
-    f.render_widget(group_paragraphs, chunks[0]);
     f.render_widget(task_paragraphs, chunks[1]);
+
+    app.task_groups[app.index].scroll.max = tasks_y_max;
+
+    app.task_groups[0].tasks[3].content = format!("{:?}", app.scroll);
+    app.task_groups[0].tasks[4].content = format!("{:?}", app.task_groups[app.index].scroll);
 
     // If app.InputMode == Insert, then draw input ui
     let mut make_input_border = |s: String| {

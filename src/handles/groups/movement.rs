@@ -21,4 +21,19 @@ impl TaskGroup {
         }
         self.index -= 1;
     }
+
+    pub fn scroll_left(&mut self) {
+        if self.scroll.current == 0 {
+            if self.scroll.max > 0 {self.scroll.current = self.scroll.max as u16}
+            else {self.scroll.current = 0}
+        }
+        else {self.scroll.current -= 1;}
+    }
+
+    pub fn scroll_right(&mut self) {
+        if self.scroll.max > 0 {
+            if self.scroll.current as i16 >= self.scroll.max {self.scroll.current = 0}
+            else {self.scroll.current += 1}
+        } else {self.scroll.current = 0}
+    }
 }

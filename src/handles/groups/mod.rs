@@ -1,5 +1,5 @@
 use chrono::Utc;
-use crate::models::TaskGroup;
+use crate::models::{TaskGroup, ScrollY};
 
 pub mod modify;
 pub mod movement;
@@ -13,6 +13,7 @@ impl TaskGroup {
             tasks: vec![],
             index: 0,
             create_time: local_time,
+            scroll: ScrollY { current: 0, max: 0 },
         }
     }
 }

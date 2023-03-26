@@ -15,8 +15,7 @@ impl App {
             task_groups,
             input_mode: InputMode::Normal,
             index: 0,
-            scroll_task: ScrollY { current: 0, max: 0 },
-            scroll_group: ScrollY { current: 0, max: 0 },
+            scroll: ScrollY { current: 0, max: 0 },
             window: Window::Groups,
         }
     }

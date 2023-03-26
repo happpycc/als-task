@@ -20,8 +20,10 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
             match app.window {
                 Window::Groups => match app.input_mode {
                     InputMode::Normal => match key.code {
+                        KeyCode::Char('h') => app.scroll_left(),
                         KeyCode::Char('j') => app.index_next(),
                         KeyCode::Char('k') => app.index_prev(),
+                        KeyCode::Char('l') => app.scroll_right(),
                         KeyCode::Char('H') => app.window_change(),
                         KeyCode::Char('L') => app.window_change(),
                         KeyCode::Char('o') => {
@@ -74,8 +76,10 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
                     let task_group = &mut app.task_groups[app.index];
                     match app.input_mode {
                         InputMode::Normal => match key.code {
-                            KeyCode::Char('j') => task_group.index_next(),
-                            KeyCode::Char('k') => task_group.index_prev(),
+                        KeyCode::Char('h') => task_group.scroll_left(),
+                        KeyCode::Char('j') => task_group.index_next(),
+                        KeyCode::Char('k') => task_group.index_prev(),
+                        KeyCode::Char('l') => task_group.scroll_right(),
                             KeyCode::Char('H') => {
                                 app.window_change();
                             }

@@ -1,6 +1,6 @@
 use rusqlite::Connection;
 
-use crate::models::TaskGroup;
+use crate::models::{TaskGroup, ScrollY};
 
 use self::{groups::init_groups, tasks::get_tasks};
 
@@ -33,6 +33,7 @@ pub fn get_all_data(conn: &Connection)
             name,
             index: 0,
             create_time,
+            scroll: ScrollY { current: 0, max: 0 }
         });
     }
 

@@ -5,8 +5,8 @@ pub fn make_layout(size: Rect) -> Vec<Rect> {
         .direction(Direction::Horizontal)
         .constraints(
             [
-                Constraint::Percentage(25),
-                Constraint::Percentage(75),
+                Constraint::Percentage(28),
+                Constraint::Percentage(72),
             ]
                 .as_ref(),
         )
