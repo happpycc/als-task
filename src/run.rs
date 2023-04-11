@@ -1,5 +1,4 @@
 use std::io;
-
 use crossterm::event::{self, Event, KeyCode};
 use tui::{backend::Backend, Terminal};
 use tui_textarea::{CursorMove, TextArea};
@@ -114,7 +113,8 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
                                 app.input_mode = InputMode::Insert(InsertPosistion::Current);
                             }
                             KeyCode::Char('d') => task_group.delete_current(&app.conn),
-                            KeyCode::Char(' ') => {}
+                            KeyCode::Char('x') => task_group.task_state_abandon(&app.conn),
+                            KeyCode::Char(' ') => task_group.change_task_state(&app.conn),
                             KeyCode::Char('q') => return Ok(()),
                             _ => {}
                         },
