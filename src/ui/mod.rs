@@ -1,29 +1,28 @@
 use tui::{
     backend::Backend,
-    Frame, widgets::{Borders, Block, Paragraph, Clear}, text::{Spans, Span}, style::{Style, Color}, layout::Alignment,
+    layout::Alignment,
+    style::{Color, Style},
+    text::{Span, Spans},
+    widgets::{Block, Borders, Clear, Paragraph},
+    Frame,
 };
 use tui_textarea::TextArea;
 
-use crate::models::{App, Window, InputMode, InsertPosistion};
+use crate::models::{App, InputMode, InsertPosistion, Window};
 
+mod groups;
 mod layout;
 mod tasks;
-mod groups;
 
-use self::layout::{make_layout, centered_rect};
 use self::groups::make_group_texts;
+use self::layout::{centered_rect, make_layout};
 use self::tasks::make_task_texts;
-
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App, textarea: &mut TextArea) {
     let size = f.size();
 
     // Make Layout
     let chunks = make_layout(size);
-
-    app.task_groups[0].tasks[0].content = format!("{:?}", size);
-    app.task_groups[0].tasks[1].content = format!("{:?}", chunks[0]);
-    app.task_groups[0].tasks[2].content = format!("{:?}", chunks[1]);
 
     // task_groups
     // Make groups texts
@@ -32,10 +31,13 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App, textarea: &mut TextArea) 
     // Draw task_groups ui
     let groups_block = Block::default()
         .title_alignment(Alignment::Center)
-        .title(Spans::from(Span::styled("Groups",
+        .title(Spans::from(Span::styled(
+            "Groups",
             if app.window == Window::Groups {
                 Style::default().fg(Color::Black).bg(Color::White)
-            } else {Style::default().fg(Color::White).bg(Color::Reset)}
+            } else {
+                Style::default().fg(Color::White).bg(Color::Reset)
+            },
         )))
         .borders(Borders::ALL);
 
@@ -54,10 +56,13 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App, textarea: &mut TextArea) 
     // Draw tasks ui
     let tasks_block = Block::default()
         .title_alignment(Alignment::Center)
-        .title(Spans::from(Span::styled("Tasks",
+        .title(Spans::from(Span::styled(
+            "Tasks",
             if app.window == Window::Tasks {
                 Style::default().fg(Color::Black).bg(Color::White)
-            } else {Style::default().fg(Color::White).bg(Color::Reset)}
+            } else {
+                Style::default().fg(Color::White).bg(Color::Reset)
+            },
         )))
         .borders(Borders::ALL);
 
@@ -69,48 +74,39 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App, textarea: &mut TextArea) 
 
     app.task_groups[app.index].scroll.max = tasks_y_max;
 
-    app.task_groups[0].tasks[3].content = format!("{:?}", app.scroll);
-    app.task_groups[0].tasks[4].content = format!("{:?}", app.task_groups[app.index].scroll);
-
     // If app.InputMode == Insert, then draw input ui
     let mut make_input_border = |s: String| {
         let input_border = Block::default()
             .title_alignment(Alignment::Center)
             .title(s)
-        .borders(Borders::ALL);
+            .borders(Borders::ALL);
         let area = centered_rect(40, 12, size);
         textarea.set_block(input_border);
         f.render_widget(Clear, area); //this clears out the background
         f.render_widget(textarea.widget(), area);
     };
     match &app.input_mode {
-        InputMode::Normal => {},
+        InputMode::Normal => {}
         InputMode::Insert(position) => match position {
-            InsertPosistion::Current => {
-                make_input_border(
-                    format!("Rename {}", match app.window {
-                        Window::Tasks => "task",
-                        Window::Groups => "group"
-                    })
-                )
-            },
-            _ => {
-                make_input_border(
-                    format!("Add new {}", match app.window {
-                        Window::Tasks => "task",
-                        Window::Groups => "group"
-                    })
-                )
-            }
-
-        }
+            InsertPosistion::Current => make_input_border(format!(
+                "Rename {}",
+                match app.window {
+                    Window::Tasks => "task",
+                    Window::Groups => "group",
+                }
+            )),
+            _ => make_input_border(format!(
+                "Add new {}",
+                match app.window {
+                    Window::Tasks => "task",
+                    Window::Groups => "group",
+                }
+            )),
+        },
     }
 }
 
-
-fn get_showing_range(len: usize, window_height: u16, index: usize)
-    -> (usize, usize, usize)
-{
+fn get_showing_range(len: usize, window_height: u16, index: usize) -> (usize, usize, usize) {
     let begin: usize;
     let end: usize;
     let highlight_index: usize;
@@ -121,7 +117,7 @@ fn get_showing_range(len: usize, window_height: u16, index: usize)
         end = len;
         highlight_index = index;
     } else {
-    // out of window
+        // out of window
         if index as isize <= can_showed_num as isize / 2 - 1 {
             begin = 0;
             end = can_showed_num;
@@ -130,8 +126,7 @@ fn get_showing_range(len: usize, window_height: u16, index: usize)
             begin = len - can_showed_num;
             end = len;
             highlight_index = index - (len - can_showed_num);
-        }
-        else {
+        } else {
             if can_showed_num > 1 {
                 if can_showed_num % 2 == 0 {
                     begin = index - (can_showed_num / 2 - 1);
@@ -151,4 +146,3 @@ fn get_showing_range(len: usize, window_height: u16, index: usize)
     }
     (begin, end, highlight_index)
 }
-

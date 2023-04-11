@@ -27,8 +27,8 @@ impl TaskGroup {
         let content = &content[0];
 
         // If content == "" return 
-        if content == "" {
-            return self.add_abandoned()
+        if content.trim() == "" {
+            return self.add_abandoned(input_mode)
         }
 
         self.tasks[self.index].content = content.to_string();
@@ -59,8 +59,23 @@ impl TaskGroup {
         }
     }
 
-    pub fn add_abandoned(&mut self) {
-        
+    pub fn add_abandoned(
+        &mut self,
+        input_mode: &InputMode
+    ) {
+        match input_mode {
+            InputMode::Normal => {}
+            InputMode::Insert(position) => match &position {
+                InsertPosistion::Next => {
+                    self.tasks.remove(self.index);
+                    self.index -= if self.tasks.len() == 0 {0} else {1}
+                }
+                InsertPosistion::Previous => {
+                    self.tasks.remove(self.index);
+                },
+                InsertPosistion::Current => {}
+            }
+        }
     }
 
     pub fn delete_current(&mut self, conn: &Connection) {

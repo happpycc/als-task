@@ -28,7 +28,7 @@ impl App {
         // If name == "" return 
         // If name == "groups" return 
         // If has name return
-        if name == ""
+        if name.trim() == ""
             || name == "groups"
             || name == "homeless"
             || !self.repeat_or_not(name)
